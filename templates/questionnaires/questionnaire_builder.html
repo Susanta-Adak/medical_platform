@@ -21,14 +21,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="form-label fw-semibold">Questionnaire Title *</label>
-                    <input type="text" id="questionnaireTitle" class="form-input" 
-                           placeholder="e.g., Medical Screening Form"
-                           value="{% if questionnaire %}{{ questionnaire.title }}{% endif %}">
+                    <input type="text" id="questionnaireTitle" class="form-input"
+                        placeholder="e.g., Medical Screening Form"
+                        value="{% if questionnaire %}{{ questionnaire.title }}{% endif %}">
                 </div>
                 <div>
                     <label class="form-label fw-semibold">Description</label>
-                    <textarea id="questionnaireDescription" class="form-textarea" rows="3" 
-                              placeholder="Brief description of the questionnaire">{% if questionnaire %}{{ questionnaire.description }}{% endif %}</textarea>
+                    <textarea id="questionnaireDescription" class="form-textarea" rows="3"
+                        placeholder="Brief description of the questionnaire">{% if questionnaire %}{{ questionnaire.description }}{% endif %}</textarea>
                 </div>
             </div>
         </div>
@@ -68,11 +68,12 @@
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                
+
                 <!-- Question Text -->
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Question *</label>
-                    <textarea class="question-text form-textarea" rows="2" placeholder="Enter your question here"></textarea>
+                    <textarea class="question-text form-textarea" rows="2"
+                        placeholder="Enter your question here"></textarea>
                 </div>
 
                 <!-- Question Type -->
@@ -89,10 +90,12 @@
                         <div class="yes-no-actions hidden mt-3">
                             <p class="text-sm font-semibold mb-2 text-gray-400">Branching Rules (Optional)</p>
                             <div class="flex space-x-2">
-                                <button type="button" onclick="addFollowUp(this, 'yes')" class="btn btn-sm btn-outline-success">
+                                <button type="button" onclick="addFollowUp(this, 'yes')"
+                                    class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-plus mr-1"></i> Add YES follow-up
                                 </button>
-                                <button type="button" onclick="addFollowUp(this, 'no')" class="btn btn-sm btn-outline-danger">
+                                <button type="button" onclick="addFollowUp(this, 'no')"
+                                    class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-plus mr-1"></i> Add NO follow-up
                                 </button>
                             </div>
@@ -135,30 +138,29 @@
             <button type="button" onclick="removeOption(this)" class="btn btn-sm btn-outline-danger mt-1">
                 <i class="fas fa-times"></i>
             </button>
-            
+
             <div class="flex-grow-1">
                 <div class="row align-items-center">
                     <!-- Text Option -->
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Text Option</label>
-                        <input type="text" class="option-text form-control form-control-sm" 
-                               placeholder="Enter option text" 
-                               onchange="handleOptionTextChange(this)">
+                        <input type="text" class="option-text form-control form-control-sm"
+                            placeholder="Enter option text" onchange="handleOptionTextChange(this)">
                     </div>
-                    
+
                     <!-- OR Divider -->
                     <div class="col-auto">
                         <div class="text-muted small fw-bold">OR</div>
                     </div>
-                    
+
                     <!-- Image Option -->
                     <div class="col-md-5">
                         <label class="form-label small fw-semibold">Image Option</label>
                         <div class="d-flex gap-2">
-                            <input type="file" class="option-image d-none" accept="image/*" 
-                                   onchange="handleImageUpload(this)">
-                            <button type="button" onclick="this.previousElementSibling.click()" 
-                                    class="btn btn-sm btn-outline-secondary">
+                            <input type="file" class="option-image d-none" accept="image/*"
+                                onchange="handleImageUpload(this)">
+                            <button type="button" onclick="this.previousElementSibling.click()"
+                                class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-image me-1"></i> Choose Image
                             </button>
                             <div class="option-image-preview d-none">
@@ -174,496 +176,537 @@
 </template>
 
 <script>
-let questionCounter = 0;
-let optionCounter = 0;
+    let questionCounter = 0;
+    let optionCounter = 0;
 
-function addQuestion() {
-    questionCounter++;
-    const template = document.getElementById('questionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Set question ID and number
-    const questionItem = clone.querySelector('.question-item');
-    questionItem.dataset.questionId = 'new_' + questionCounter;
-    
-    // Add to container
-    const container = document.getElementById('questionsContainer');
-    container.appendChild(clone);
-    
-    // Hide empty state
-    document.getElementById('emptyState').classList.add('hidden');
-    
-    // Reorder questions
-    updateQuestionNumbers();
-}
+    function addQuestion() {
+        questionCounter++;
+        const template = document.getElementById('questionTemplate');
+        const clone = template.content.cloneNode(true);
 
-function addFollowUp(btn, triggerAnswer) {
-    questionCounter++;
-    const template = document.getElementById('questionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Set question ID and number
-    const questionItem = clone.querySelector('.question-item');
-    questionItem.dataset.questionId = 'new_' + questionCounter;
-    questionItem.dataset.triggerAnswer = triggerAnswer;
-    
-    // Style as followup
-    questionItem.classList.replace('border-gray-700', triggerAnswer === 'yes' ? 'border-green-800' : 'border-red-800');
-    questionItem.style.marginTop = '1rem';
-    
-    // Add label indicator
-    const labelSpan = document.createElement('span');
-    labelSpan.className = `ml-3 px-2 py-1 rounded text-xs font-bold ${triggerAnswer === 'yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-    labelSpan.textContent = `If ${triggerAnswer.toUpperCase()}`;
-    clone.querySelector('.flex.items-center.space-x-4').appendChild(labelSpan);
-    
-    // Find followups container of parent
-    const parentContainer = btn.closest('.question-item').querySelector('.followups-container');
-    parentContainer.appendChild(clone);
-    
-    // Reorder questions
-    updateQuestionNumbers();
-}
+        // Set question ID and number
+        const questionItem = clone.querySelector('.question-item');
+        questionItem.dataset.questionId = 'new_' + questionCounter;
 
-function removeQuestion(button) {
-    const questionItem = button.closest('.question-item');
-    questionItem.remove();
-    
-    // Show empty state if no top-level questions
-    const container = document.getElementById('questionsContainer');
-    if (container.children.length === 0) {
-        document.getElementById('emptyState').classList.remove('hidden');
+        // Add to container
+        const container = document.getElementById('questionsContainer');
+        container.appendChild(clone);
+
+        // Hide empty state
+        document.getElementById('emptyState').classList.add('hidden');
+
+        // Reorder questions
+        updateQuestionNumbers();
     }
-    
-    // Reorder questions
-    updateQuestionNumbers();
-}
 
-function updateQuestionNumbers() {
-    const buildNumbers = (container, prefix) => {
-        let count = 1;
-        // Immediate children only
-        Array.from(container.children).forEach(item => {
-            if (!item.classList.contains('question-item')) return;
-            const num = prefix ? `${prefix}.${count}` : `${count}`;
-            item.querySelector('.question-number').textContent = num;
-            
-            // Recurse into followups
-            const followupsContainer = item.querySelector('.followups-container');
-            if (followupsContainer) {
-                // Determine suffix based on trigger answer
-                let nextPrefix = num;
-                Array.from(followupsContainer.children).forEach(followup => {
-                    const trigger = followup.dataset.triggerAnswer;
-                    if (trigger === 'yes') followup.querySelector('.question-number').textContent = num + '.1';
-                    if (trigger === 'no') followup.querySelector('.question-number').textContent = num + '.2';
-                    
-                    // Recursive call for deeper nesting
-                    const nestedFollowups = followup.querySelector('.followups-container');
-                    if (nestedFollowups) buildNumbers(nestedFollowups, followup.querySelector('.question-number').textContent);
-                });
-            }
-            if (!prefix) count++;
-        });
-    };
-    buildNumbers(document.getElementById('questionsContainer'), '');
-}
+    function addFollowUp(btn, triggerAnswer) {
+        questionCounter++;
+        const template = document.getElementById('questionTemplate');
+        const clone = template.content.cloneNode(true);
 
-function handleQuestionTypeChange(select) {
-    const questionItem = select.closest('.question-item');
-    const optionsContainer = questionItem.querySelector('.multiple-choice-options');
-    const yesNoActions = questionItem.querySelector('.yes-no-actions');
-    
-    if (select.value === 'multiple_choice') {
-        optionsContainer.classList.remove('hidden');
-        if (yesNoActions) yesNoActions.classList.add('hidden');
-        // Add default options if none exist
-        const container = optionsContainer.querySelector('.options-container');
+        // Set question ID and number
+        const questionItem = clone.querySelector('.question-item');
+        questionItem.dataset.questionId = 'new_' + questionCounter;
+        questionItem.dataset.triggerAnswer = triggerAnswer;
+
+        // Style as followup
+        questionItem.classList.replace('border-gray-700', triggerAnswer === 'yes' ? 'border-green-800' : 'border-red-800');
+        questionItem.style.marginTop = '1rem';
+
+        // Add label indicator
+        const labelSpan = document.createElement('span');
+        labelSpan.className = `ml-3 px-2 py-1 rounded text-xs font-bold ${triggerAnswer === 'yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+        labelSpan.textContent = `If ${triggerAnswer.toUpperCase()}`;
+        clone.querySelector('.flex.items-center.space-x-4').appendChild(labelSpan);
+
+        // Find followups container of parent
+        const parentContainer = btn.closest('.question-item').querySelector('.followups-container');
+        parentContainer.appendChild(clone);
+
+        // Reorder questions
+        updateQuestionNumbers();
+    }
+
+    function removeQuestion(button) {
+        const questionItem = button.closest('.question-item');
+        questionItem.remove();
+
+        // Show empty state if no top-level questions
+        const container = document.getElementById('questionsContainer');
         if (container.children.length === 0) {
-            addOption(optionsContainer.querySelector('.btn'));
-            addOption(optionsContainer.querySelector('.btn'));
+            document.getElementById('emptyState').classList.remove('hidden');
         }
-    } else if (select.value === 'yes_no') {
-        optionsContainer.classList.add('hidden');
-        if (yesNoActions) yesNoActions.classList.remove('hidden');
-    } else {
-        optionsContainer.classList.add('hidden');
-        if (yesNoActions) yesNoActions.classList.add('hidden');
+
+        // Reorder questions
+        updateQuestionNumbers();
     }
-}
 
-function addOption(button) {
-    optionCounter++;
-    const template = document.getElementById('optionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Add to options container
-    const optionsContainer = button.closest('.multiple-choice-options').querySelector('.options-container');
-    optionsContainer.appendChild(clone);
-}
+    function updateQuestionNumbers() {
+        const buildNumbers = (container, prefix) => {
+            let count = 1;
+            // Immediate children only
+            Array.from(container.children).forEach(item => {
+                if (!item.classList.contains('question-item')) return;
+                const num = prefix ? `${prefix}.${count}` : `${count}`;
+                item.querySelector('.question-number').textContent = num;
 
-function removeOption(button) {
-    const optionItem = button.closest('.option-item');
-    optionItem.remove();
-}
+                // Recurse into followups
+                const followupsContainer = item.querySelector('.followups-container');
+                if (followupsContainer) {
+                    // Determine suffix based on trigger answer
+                    let nextPrefix = num;
+                    Array.from(followupsContainer.children).forEach(followup => {
+                        const trigger = followup.dataset.triggerAnswer;
+                        if (trigger === 'yes') followup.querySelector('.question-number').textContent = num + '.1';
+                        if (trigger === 'no') followup.querySelector('.question-number').textContent = num + '.2';
 
-function handleImageUpload(input) {
-    const file = input.files[0];
-    const optionItem = input.closest('.option-item');
-    const nameSpan = optionItem.querySelector('.option-image-name');
-    const previewDiv = optionItem.querySelector('.option-image-preview');
-    const textInput = optionItem.querySelector('.option-text');
-    
-    if (file) {
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            alert('Please select an image file');
-            input.value = '';
-            return;
-        }
-        
-        // Validate file size (5MB limit)
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('Image file must be less than 5MB');
-            input.value = '';
-            return;
-        }
-        
-        // Show file name
-        nameSpan.textContent = file.name;
-        
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = previewDiv.querySelector('img');
-            img.src = e.target.result;
-            previewDiv.classList.remove('d-none');
+                        // Recursive call for deeper nesting
+                        const nestedFollowups = followup.querySelector('.followups-container');
+                        if (nestedFollowups) buildNumbers(nestedFollowups, followup.querySelector('.question-number').textContent);
+                    });
+                }
+                if (!prefix) count++;
+            });
         };
-        reader.readAsDataURL(file);
-        
-        // Clear and disable text input
-        textInput.value = '';
-        textInput.disabled = true;
-        textInput.classList.add('bg-light');
-    } else {
-        // Hide preview and clear name
-        nameSpan.textContent = '';
-        previewDiv.classList.add('d-none');
-        
-        // Enable text input
-        textInput.disabled = false;
-        textInput.classList.remove('bg-light');
+        buildNumbers(document.getElementById('questionsContainer'), '');
     }
-}
 
-function handleOptionTextChange(input) {
-    const optionItem = input.closest('.option-item');
-    const imageInput = optionItem.querySelector('.option-image');
-    const previewDiv = optionItem.querySelector('.option-image-preview');
-    const nameSpan = optionItem.querySelector('.option-image-name');
-    
-    // If text is entered, clear image
-    if (input.value.trim()) {
-        imageInput.value = '';
-        previewDiv.classList.add('d-none');
-        nameSpan.textContent = '';
-    }
-}
+    function handleQuestionTypeChange(select) {
+        const questionItem = select.closest('.question-item');
+        const optionsContainer = questionItem.querySelector('.multiple-choice-options');
+        const yesNoActions = questionItem.querySelector('.yes-no-actions');
 
-function saveQuestionnaire() {
-    const title = document.getElementById('questionnaireTitle').value.trim();
-    const description = document.getElementById('questionnaireDescription').value.trim();
-    
-    if (!title) {
-        alert('Please enter a questionnaire title');
-        return;
-    }
-    
-    const questions = [];
-    
-    // Flatten hierarchy and assign ids/parents
-    const flattenQuestions = (container, parentId = null) => {
-        const items = container.children;
-        Array.from(items).forEach((item) => {
-            if (!item.classList.contains('question-item')) return;
-            
-            const questionText = item.querySelector('.question-text').value.trim();
-            const questionType = item.querySelector('.question-type').value;
-            const isRequired = item.querySelector('.question-required').checked;
-            const itemId = item.dataset.dbId || item.dataset.questionId;
-            const triggerAnswer = item.dataset.triggerAnswer || null;
-            
-            if (!questionText || !questionType) {
-                throw new Error('Please complete all question fields');
+        if (select.value === 'multiple_choice') {
+            optionsContainer.classList.remove('hidden');
+            if (yesNoActions) yesNoActions.classList.add('hidden');
+            // Add default options if none exist
+            const container = optionsContainer.querySelector('.options-container');
+            if (container.children.length === 0) {
+                addOption(optionsContainer.querySelector('.btn'));
+                addOption(optionsContainer.querySelector('.btn'));
             }
-            
-            const question = {
-                id: itemId,
-                parent_id: parentId,
-                trigger_answer: triggerAnswer,
-                question_text: questionText,
-                type: questionType,
-                required: isRequired,
-                order: questions.length + 1
+        } else if (select.value === 'yes_no') {
+            optionsContainer.classList.add('hidden');
+            if (yesNoActions) yesNoActions.classList.remove('hidden');
+        } else {
+            optionsContainer.classList.add('hidden');
+            if (yesNoActions) yesNoActions.classList.add('hidden');
+        }
+    }
+
+    function addOption(button) {
+        optionCounter++;
+        const template = document.getElementById('optionTemplate');
+        const clone = template.content.cloneNode(true);
+
+        // Add to options container
+        const optionsContainer = button.closest('.multiple-choice-options').querySelector('.options-container');
+        optionsContainer.appendChild(clone);
+    }
+
+    function removeOption(button) {
+        const optionItem = button.closest('.option-item');
+        optionItem.remove();
+    }
+
+    function handleImageUpload(input) {
+        const file = input.files[0];
+        const optionItem = input.closest('.option-item');
+        const nameSpan = optionItem.querySelector('.option-image-name');
+        const previewDiv = optionItem.querySelector('.option-image-preview');
+        const textInput = optionItem.querySelector('.option-text');
+
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                input.value = '';
+                return;
+            }
+
+            // Validate file size (5MB limit)
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('Image file must be less than 5MB');
+                input.value = '';
+                return;
+            }
+
+            // Show file name
+            nameSpan.textContent = file.name;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = previewDiv.querySelector('img');
+                img.src = e.target.result;
+                previewDiv.classList.remove('d-none');
             };
-            
-            // Add options for multiple choice questions
-            if (questionType === 'multiple_choice') {
-                const options = [];
-                const optionItems = item.querySelectorAll('.option-item');
-                
-                for (const optionItem of optionItems) {
-                    const text = optionItem.querySelector('.option-text').value.trim();
-                    const imageInput = optionItem.querySelector('.option-image');
-                    const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
-                    
-                    if (text || imageFile) {
-                        options.push({
-                            text: text,
-                            image_file: imageFile,
-                            order: options.length + 1
-                        });
-                    }
-                }
-                
-                if (options.length < 2) {
-                    throw new Error('Multiple choice questions must have at least 2 options');
-                }
-                
-                question.options = options;
-            }
-            
-            questions.push(question);
-            
-            // Recurse into children
-            const followupsContainer = item.querySelector('.followups-container');
-            if (followupsContainer) {
-                flattenQuestions(followupsContainer, itemId);
-            }
-        });
-    };
-    
-    try {
-        flattenQuestions(document.getElementById('questionsContainer'));
-    } catch(e) {
-        alert(e.message);
-        return;
+            reader.readAsDataURL(file);
+
+            // Clear and disable text input
+            textInput.value = '';
+            textInput.disabled = true;
+            textInput.classList.add('bg-light');
+        } else {
+            // Hide preview and clear name
+            nameSpan.textContent = '';
+            previewDiv.classList.add('d-none');
+
+            // Enable text input
+            textInput.disabled = false;
+            textInput.classList.remove('bg-light');
+        }
     }
 
-    
-    if (questions.length === 0) {
-        alert('Please add at least one question');
-        return;
+    function handleOptionTextChange(input) {
+        const optionItem = input.closest('.option-item');
+        const imageInput = optionItem.querySelector('.option-image');
+        const previewDiv = optionItem.querySelector('.option-image-preview');
+        const nameSpan = optionItem.querySelector('.option-image-name');
+
+        // If text is entered, clear image
+        if (input.value.trim()) {
+            imageInput.value = '';
+            previewDiv.classList.add('d-none');
+            nameSpan.textContent = '';
+        }
     }
-    
-    // Send data to backend
-    const csrftoken = getCookie('csrftoken');
-    
-    console.log('Sending data:', {
+
+    function saveQuestionnaire() {
+        const title = document.getElementById('questionnaireTitle').value.trim();
+        const description = document.getElementById('questionnaireDescription').value.trim();
+
+        if (!title) {
+            alert('Please enter a questionnaire title');
+            return;
+        }
+
+        const questions = [];
+
+        // Flatten hierarchy and assign ids/parents
+        const flattenQuestions = (container, parentId = null) => {
+            const items = container.children;
+            Array.from(items).forEach((item) => {
+                if (!item.classList.contains('question-item')) return;
+
+                const questionText = item.querySelector('.question-text').value.trim();
+                const questionType = item.querySelector('.question-type').value;
+                const isRequired = item.querySelector('.question-required').checked;
+                const itemId = item.dataset.dbId || item.dataset.questionId;
+                const triggerAnswer = item.dataset.triggerAnswer || null;
+
+                if (!questionText || !questionType) {
+                    throw new Error('Please complete all question fields');
+                }
+
+                const question = {
+                    id: itemId,
+                    parent_id: parentId,
+                    trigger_answer: triggerAnswer,
+                    question_text: questionText,
+                    type: questionType,
+                    required: isRequired,
+                    order: questions.length + 1
+                };
+
+                // Add options for multiple choice questions
+                if (questionType === 'multiple_choice') {
+                    const options = [];
+                    const optionItems = item.querySelectorAll('.option-item');
+
+                    for (let j = 0; j < optionItems.length; j++) {
+                        const optionItem = optionItems[j];
+                        const text = optionItem.querySelector('.option-text').value.trim();
+                        const imageInput = optionItem.querySelector('.option-image');
+                        const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
+                        const hasExistingImage = optionItem.dataset.has_image === 'true';
+                        const dbId = optionItem.dataset.db_id || null;
+
+                        if (text || imageFile || hasExistingImage) {
+                            const optId = `opt_${questions.length}_${options.length}`;
+                            options.push({
+                                id: optId,
+                                db_id: dbId,
+                                text: text,
+                                image_file: imageFile,
+                                image_key: imageFile ? `image_${optId}` : null,
+                                order: options.length + 1
+                            });
+                        }
+                    }
+
+                    if (options.length < 2) {
+                        throw new Error('Multiple choice questions must have at least 2 options');
+                    }
+
+                    question.options = options;
+                }
+
+                questions.push(question);
+
+                // Recurse into children
+                const followupsContainer = item.querySelector('.followups-container');
+                if (followupsContainer) {
+                    flattenQuestions(followupsContainer, itemId);
+                }
+            });
+        };
+
+        try {
+            flattenQuestions(document.getElementById('questionsContainer'));
+        } catch (e) {
+            alert(e.message);
+            return;
+        }
+
+
+        if (questions.length === 0) {
+            alert('Please add at least one question');
+            return;
+        }
+
+        // Send data to backend using FormData for file support
+        const csrftoken = getCookie('csrftoken');
+
+        // Determine if we're in edit mode
+        const isEditMode = {% if questionnaire %} true{% else %} false{% endif %};
+    const url = isEditMode ? '/questionnaires/builder/{% if questionnaire %}{{ questionnaire.pk }}{% endif %}/edit/' : '/questionnaires/api/save/';
+
+    const formData = new FormData();
+
+    // Add all files first and remove them from the JSON hierarchy to avoid serialization problems
+    const cleanQuestions = JSON.parse(JSON.stringify(questions, (key, value) => {
+        if (key === 'image_file') return undefined;
+        return value;
+    }));
+
+    formData.append('data', JSON.stringify({
         title,
         description,
-        questions
+        questions: cleanQuestions
+    }));
+
+    // Attach the actual image files
+    questions.forEach(q => {
+        if (q.options) {
+            q.options.forEach(opt => {
+                if (opt.image_key && opt.image_file) {
+                    formData.append(opt.image_key, opt.image_file);
+                }
+            });
+        }
     });
-    
-    // Determine if we're in edit mode
-    const isEditMode = {% if questionnaire %}true{% else %}false{% endif %};
-    const url = isEditMode ? '/questionnaires/builder/{% if questionnaire %}{{ questionnaire.pk }}{% endif %}/edit/' : '/questionnaires/api/save/';
-    
+
+    console.log('Sending FormData structure to', url);
+
     fetch(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRFToken': csrftoken
+            // Do not set Content-Type header; fetch will automatically set it to multipart/form-data with the correct boundary
         },
-        body: JSON.stringify({
-            title,
-            description,
-            questions
+        body: formData
+    })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
         })
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        if (data.success) {
-            alert('Questionnaire ' + (isEditMode ? 'updated' : 'saved') + ' successfully!');
-            // Redirect to admin list
-            window.location.href = '/dashboard/admin/questionnaires/';
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error ' + (isEditMode ? 'updating' : 'saving') + ' questionnaire. Please try again.');
-    });
-}
-
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    // Load existing questions if in edit mode
-    const questionsDataElement = document.querySelector('[data-questions-data]');
-    const questionsData = questionsDataElement ? JSON.parse(questionsDataElement.getAttribute('data-questions-data') || '[]') : [];
-    
-    if (questionsData && questionsData.length > 0) {
-        // Clear the empty state
-        document.getElementById('emptyState').classList.add('hidden');
-        
-        // Rebuild hierarchy
-        const questionMap = {};
-        const roots = [];
-        
-        // Create maps
-        questionsData.forEach(q => {
-            q.children = [];
-            questionMap[q.id] = q;
-        });
-        
-        // Build tree
-        questionsData.forEach(q => {
-            if (q.parent_id && questionMap[q.parent_id]) {
-                questionMap[q.parent_id].children.push(q);
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                alert('Questionnaire ' + (isEditMode ? 'updated' : 'saved') + ' successfully!');
+                // Redirect to admin list
+                window.location.href = '/dashboard/admin/questionnaires/';
             } else {
-                roots.push(q);
+                alert('Error: ' + data.error);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error ' + (isEditMode ? 'updating' : 'saving') + ' questionnaire. Please try again.');
         });
-        
-        // Render tree
-        const renderTree = (nodeData, containerNode, isFollowUp = false) => {
-            const itemNode = addQuestionNode(nodeData, containerNode, isFollowUp);
-            if (nodeData.children && nodeData.children.length > 0) {
-                const followupsContainer = itemNode.querySelector('.followups-container');
-                nodeData.children.forEach(child => renderTree(child, followupsContainer, true));
-            }
-        };
-        
-        const container = document.getElementById('questionsContainer');
-        roots.forEach(r => renderTree(r, container, false));
-        
-        updateQuestionNumbers();
-        
-    } else {
-        // Add initial question for new questionnaires
-        addQuestion();
-    }
-});
-
-function addQuestionNode(existingData, parentContainer, isFollowUp) {
-    questionCounter++;
-    const template = document.getElementById('questionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Set question ID
-    const questionItem = clone.querySelector('.question-item');
-    questionItem.dataset.questionId = 'existing_' + questionCounter;
-    
-    if (existingData) {
-        questionItem.dataset.dbId = existingData.id;
-        
-        clone.querySelector('.question-text').value = existingData.question_text || existingData.text || '';
-        clone.querySelector('.question-type').value = existingData.type || '';
-        clone.querySelector('.question-required').checked = existingData.required || false;
-        
-        if (isFollowUp) {
-            questionItem.dataset.triggerAnswer = existingData.trigger_answer;
-            questionItem.classList.replace('border-gray-700', existingData.trigger_answer === 'yes' ? 'border-green-800' : 'border-red-800');
-            questionItem.style.marginTop = '1rem';
-            
-            const labelSpan = document.createElement('span');
-            labelSpan.className = `ml-3 px-2 py-1 rounded text-xs font-bold ${existingData.trigger_answer === 'yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-            labelSpan.textContent = `If ${existingData.trigger_answer.toUpperCase()}`;
-            clone.querySelector('.flex.items-center.space-x-4').appendChild(labelSpan);
-        }
-        
-        // Handle question type change to show options if needed
-        const questionTypeSelect = clone.querySelector('.question-type');
-        setTimeout(() => {
-            handleQuestionTypeChange(questionTypeSelect);
-            if (existingData.type === 'multiple_choice' && existingData.options) {
-                const optionsContainer = questionItem.querySelector('.options-container');
-                existingData.options.forEach(optionData => {
-                    addOptionWithText(questionItem, optionData.text, optionData.order);
-                });
-            }
-        }, 0);
-    }
-    
-    parentContainer.appendChild(clone);
-    return parentContainer.lastElementChild;
 }
 
-// Deprecated since we use addQuestionNode for rendering, keeping it around just in case
-function addQuestion(existingData = null) {
-    questionCounter++;
-    const template = document.getElementById('questionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Set question ID and number
-    const questionItem = clone.querySelector('.question-item');
-    questionItem.dataset.questionId = questionCounter;
-    clone.querySelector('.question-number').textContent = questionCounter;
-    
-    // Load existing data if provided
-    if (existingData) {
-        clone.querySelector('.question-text').value = existingData.question_text || existingData.text || '';
-        clone.querySelector('.question-type').value = existingData.type || '';
-        clone.querySelector('.question-required').checked = existingData.required || false;
-        
-        // Handle question type change to show options if needed
-        const questionTypeSelect = clone.querySelector('.question-type');
-        if (existingData.type === 'multiple_choice' && existingData.options) {
-            // Add options after the element is in the DOM
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function () {
+        // Load existing questions if in edit mode
+        const questionsDataElement = document.querySelector('[data-questions-data]');
+        const questionsData = questionsDataElement ? JSON.parse(questionsDataElement.getAttribute('data-questions-data') || '[]') : [];
+
+        if (questionsData && questionsData.length > 0) {
+            // Clear the empty state
+            document.getElementById('emptyState').classList.add('hidden');
+
+            // Rebuild hierarchy
+            const questionMap = {};
+            const roots = [];
+
+            // Create maps
+            questionsData.forEach(q => {
+                q.children = [];
+                questionMap[q.id] = q;
+            });
+
+            // Build tree
+            questionsData.forEach(q => {
+                if (q.parent_id && questionMap[q.parent_id]) {
+                    questionMap[q.parent_id].children.push(q);
+                } else {
+                    roots.push(q);
+                }
+            });
+
+            // Render tree
+            const renderTree = (nodeData, containerNode, isFollowUp = false) => {
+                const itemNode = addQuestionNode(nodeData, containerNode, isFollowUp);
+                if (nodeData.children && nodeData.children.length > 0) {
+                    const followupsContainer = itemNode.querySelector('.followups-container');
+                    nodeData.children.forEach(child => renderTree(child, followupsContainer, true));
+                }
+            };
+
+            const container = document.getElementById('questionsContainer');
+            roots.forEach(r => renderTree(r, container, false));
+
+            updateQuestionNumbers();
+
+        } else {
+            // Add initial question for new questionnaires
+            addQuestion();
+        }
+    });
+
+    function addQuestionNode(existingData, parentContainer, isFollowUp) {
+        questionCounter++;
+        const template = document.getElementById('questionTemplate');
+        const clone = template.content.cloneNode(true);
+
+        // Set question ID
+        const questionItem = clone.querySelector('.question-item');
+        questionItem.dataset.questionId = 'existing_' + questionCounter;
+
+        if (existingData) {
+            questionItem.dataset.dbId = existingData.id;
+
+            clone.querySelector('.question-text').value = existingData.question_text || existingData.text || '';
+            clone.querySelector('.question-type').value = existingData.type || '';
+            clone.querySelector('.question-required').checked = existingData.required || false;
+
+            if (isFollowUp) {
+                questionItem.dataset.triggerAnswer = existingData.trigger_answer;
+                questionItem.classList.replace('border-gray-700', existingData.trigger_answer === 'yes' ? 'border-green-800' : 'border-red-800');
+                questionItem.style.marginTop = '1rem';
+
+                const labelSpan = document.createElement('span');
+                labelSpan.className = `ml-3 px-2 py-1 rounded text-xs font-bold ${existingData.trigger_answer === 'yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+                labelSpan.textContent = `If ${existingData.trigger_answer.toUpperCase()}`;
+                clone.querySelector('.flex.items-center.space-x-4').appendChild(labelSpan);
+            }
+
+            // Handle question type change to show options if needed
+            const questionTypeSelect = clone.querySelector('.question-type');
             setTimeout(() => {
                 handleQuestionTypeChange(questionTypeSelect);
-                const optionsContainer = questionItem.querySelector('.options-container');
-                existingData.options.forEach(optionData => {
-                    addOptionWithText(questionItem, optionData.text, optionData.order);
-                });
+                if (existingData.type === 'multiple_choice' && existingData.options) {
+                    const optionsContainer = questionItem.querySelector('.options-container');
+                    existingData.options.forEach(optionData => {
+                        addOptionWithData(questionItem, optionData);
+                    });
+                }
             }, 0);
         }
-    }
-    
-    // Add to container
-    const container = document.getElementById('questionsContainer');
-    container.appendChild(clone);
-    
-    // Hide empty state
-    document.getElementById('emptyState').classList.add('hidden');
-    
-    updateQuestionNumbers();
-}
 
-// Helper function to add option with existing text
-function addOptionWithText(questionItem, text, order) {
-    optionCounter++;
-    const template = document.getElementById('optionTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Set the text value
-    clone.querySelector('.option-text').value = text || '';
-    
-    // Add to options container
-    const optionsContainer = questionItem.querySelector('.options-container');
-    optionsContainer.appendChild(clone);
-}
+        parentContainer.appendChild(clone);
+        return parentContainer.lastElementChild;
+    }
+
+    // Deprecated since we use addQuestionNode for rendering, keeping it around just in case
+    function addQuestion(existingData = null) {
+        questionCounter++;
+        const template = document.getElementById('questionTemplate');
+        const clone = template.content.cloneNode(true);
+
+        // Set question ID and number
+        const questionItem = clone.querySelector('.question-item');
+        questionItem.dataset.questionId = questionCounter;
+        clone.querySelector('.question-number').textContent = questionCounter;
+
+        // Load existing data if provided
+        if (existingData) {
+            clone.querySelector('.question-text').value = existingData.question_text || existingData.text || '';
+            clone.querySelector('.question-type').value = existingData.type || '';
+            clone.querySelector('.question-required').checked = existingData.required || false;
+
+            // Handle question type change to show options if needed
+            const questionTypeSelect = clone.querySelector('.question-type');
+            if (existingData.type === 'multiple_choice' && existingData.options) {
+                // Add options after the element is in the DOM
+                setTimeout(() => {
+                    handleQuestionTypeChange(questionTypeSelect);
+                    const optionsContainer = questionItem.querySelector('.options-container');
+                    existingData.options.forEach(optionData => {
+                        addOptionWithData(questionItem, optionData);
+                    });
+                }, 0);
+            }
+        }
+
+        // Add to container
+        const container = document.getElementById('questionsContainer');
+        container.appendChild(clone);
+
+        // Hide empty state
+        document.getElementById('emptyState').classList.add('hidden');
+
+        updateQuestionNumbers();
+    }
+
+    // Helper function to add option with existing data
+    function addOptionWithData(questionItem, optionData) {
+        optionCounter++;
+        const template = document.getElementById('optionTemplate');
+        const clone = template.content.cloneNode(true);
+
+        // Set the text value
+        const textInput = clone.querySelector('.option-text');
+        textInput.value = optionData.text || '';
+
+        // Keep track of database ID and image state
+        if (optionData.id) {
+            clone.querySelector('.option-item').dataset.db_id = optionData.id;
+        }
+
+        // Show image preview if exists
+        if (optionData.has_image && optionData.image_url) {
+            clone.querySelector('.option-item').dataset.has_image = 'true';
+            textInput.disabled = true;
+            textInput.classList.add('bg-light');
+            clone.querySelector('.option-image-name').textContent = optionData.image_name || 'Uploaded image';
+            const previewDiv = clone.querySelector('.option-image-preview');
+            previewDiv.querySelector('img').src = optionData.image_url;
+            previewDiv.classList.remove('d-none');
+        }
+
+        // Add to options container
+        const optionsContainer = questionItem.querySelector('.options-container');
+        optionsContainer.appendChild(clone);
+    }
 </script>
 {% endblock %}

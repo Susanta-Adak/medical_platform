@@ -1,0 +1,102 @@
+{% extends "doctor/base.html" %}
+
+{% block title %}Questionnaire Responses{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Responses</li>
+{% endblock %}
+
+{% block page_title %}Questionnaire Responses{% endblock %}
+{% block page_subtitle %}Review patient screening data.{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0 ps-0"
+                        placeholder="Search by patient ID, name, or questionnaire..." value="{{ request.GET.q }}">
+                </div>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Patient</th>
+                    <th>Questionnaire</th>
+                    <th>Conducted By</th>
+                    <th>Submitted On</th>
+                    <th class="text-end pe-4">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for response in responses %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-semibold">{{ response.patient.full_name }}</div>
+                        <small class="badge bg-light text-dark border-0">{{ response.patient.patient_id }}</small>
+                    </td>
+                    <td>
+                        <span class="fw-medium">{{ response.questionnaire.title }}</span>
+                    </td>
+                    <td>
+                        <div class="small fw-medium">
+                            {{ response.respondent.get_full_name|default:response.respondent.email }}
+                        </div>
+                        <div class="text-muted small">Operator</div>
+                    </td>
+                    <td class="text-muted small">{{ response.submitted_at|date:"M d, Y H:i" }}</td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'doctor:response_detail' response.pk %}" class="btn btn-sm btn-light border">
+                            <i class="fas fa-eye me-1 text-primary"></i> View Report
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        No responses found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="card-footer bg-white py-3">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }} of {{ paginator.num_pages }}</a></li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

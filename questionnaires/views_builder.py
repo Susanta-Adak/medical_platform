@@ -32,7 +32,12 @@ class QuestionnaireBuilderView(LoginRequiredMixin, CreateView):
 def save_questionnaire_api(request):
     """API endpoint to save questionnaire with questions and options."""
     try:
-        data = json.loads(request.body)
+        # Handle multipart/form-data with JSON encoded in 'data' field
+        data_str = request.POST.get('data')
+        if not data_str:
+            # Fallback to direct json body if not multipart
+            data_str = request.body.decode('utf-8')
+        data = json.loads(data_str)
         
         # Validate required fields
         if 'title' not in data or not data['title'].strip():
@@ -105,11 +110,17 @@ def save_questionnaire_api(request):
                 question = question_map.get(str(frontend_id)) if frontend_id is not None else Question.objects.filter(questionnaire=questionnaire, order=question_data['order']).first()
                 if question:
                     for option_data in question_data['options']:
-                        QuestionOption.objects.create(
+                        opt_obj = QuestionOption.objects.create(
                             question=question,
                             text=option_data.get('text', ''),
                             order=option_data['order']
                         )
+                        
+                        # Handle image if uploaded
+                        image_key = option_data.get('image_key')
+                        if image_key and image_key in request.FILES:
+                            opt_obj.option_image = request.FILES[image_key]
+                            opt_obj.save()
         
         return JsonResponse({
             'success': True,
@@ -139,7 +150,12 @@ def edit_questionnaire_builder(request, pk):
     if request.method == 'POST':
         # Handle saving edited questionnaire
         try:
-            data = json.loads(request.body)
+            data_str = request.POST.get('data')
+            print("----> INCOMING POST data len:", len(data_str) if data_str else "NONE!")
+            print("----> INCOMING FILES:", request.FILES.keys())
+            if not data_str:
+                data_str = request.body.decode('utf-8')
+            data = json.loads(data_str)
             
             # Update questionnaire
             questionnaire.title = data['title']
@@ -183,11 +199,17 @@ def edit_questionnaire_builder(request, pk):
                     question = question_map.get(str(frontend_id)) if frontend_id is not None else Question.objects.filter(questionnaire=questionnaire, order=question_data['order']).last()
                     if question:
                         for option_data in question_data['options']:
-                            QuestionOption.objects.create(
+                            opt_obj = QuestionOption.objects.create(
                                 question=question,
                                 text=option_data.get('text', ''),
                                 order=option_data['order']
                             )
+                            
+                            # Handle image if uploaded
+                            image_key = option_data.get('image_key')
+                            if image_key and image_key in request.FILES:
+                                opt_obj.option_image = request.FILES[image_key]
+                                opt_obj.save()
             
             return JsonResponse({
                 'success': True,

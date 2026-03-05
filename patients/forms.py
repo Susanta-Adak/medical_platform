@@ -133,8 +133,8 @@ class VitalSignsForm(BaseForm):
         if respiratory_rate and (respiratory_rate < 5 or respiratory_rate > 60):
             self.add_error('respiratory_rate', _('Respiratory rate must be between 5 and 60 bpm'))
             
-        if temperature and (temperature < 30 or temperature > 45):
-            self.add_error('temperature', _('Temperature must be between 30°C and 45°C'))
+        if temperature and (temperature < 80 or temperature > 120):
+            self.add_error('temperature', _('Temperature must be between 80°F and 120°F'))
             
         if oxygen and (oxygen < 0 or oxygen > 100):
             self.add_error('oxygen_saturation', _('Oxygen saturation must be between 0% and 100%'))

@@ -20,10 +20,17 @@
           <select class="form-select" id="questionnaireFilter">
             <option value="">All Questionnaires</option>
             {% for questionnaire in questionnaires %}
-            <option value="{{ questionnaire.id }}" {% if request.GET.questionnaire==questionnaire.id|stringformat:"s"
-              %}selected{% endif %}>
+            {% with q_id=questionnaire.id|stringformat:"s" %}
+            {% if request.GET.questionnaire == q_id %}
+            <option value="{{ questionnaire.id }}" selected>
               {{ questionnaire.title }}
             </option>
+            {% else %}
+            <option value="{{ questionnaire.id }}">
+              {{ questionnaire.title }}
+            </option>
+            {% endif %}
+            {% endwith %}
             {% endfor %}
           </select>
         </div>
@@ -55,7 +62,7 @@
               <th>Patient ID</th>
               <th>Patient Name</th>
               <th>Questionnaire</th>
-              <th>Respondent</th>
+              <th>Operator</th>
               <th>Status</th>
               <th>Submitted</th>
               <th>Duration</th>
@@ -127,6 +134,9 @@
                   <a href="{% url 'questionnaires:response_detail' response.pk %}" class="btn btn-outline-primary">
                     <i class="fas fa-eye"></i> View
                   </a>
+                  <a href="{% url 'questionnaires:response_edit' response.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
                 </div>
               </td>
             </tr>
@@ -150,7 +160,9 @@
           {% endif %}
 
           <li class="page-item active">
-            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% with n=page_obj.number p=page_obj.paginator.num_pages %}
+            <span class="page-link">Page {{ n }} of {{ p }}</span>
+            {% endwith %}
           </li>
 
           {% if page_obj.has_next %}
@@ -171,7 +183,16 @@
         <i class="fas fa-inbox text-6xl text-gray-500 mb-4"></i>
         <h3 class="text-xl font-semibold text-gray-300 mb-2">No responses found</h3>
         <p class="text-gray-500 mb-6">
-          {% if request.GET.questionnaire or request.GET.patient or request.GET.date_from or request.GET.date_to %}
+          {% if request.GET.questionnaire %}
+          Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}"
+            class="text-teal-400 hover:text-teal-300">clear all filters</a>.
+          {% elif request.GET.patient %}
+          Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}"
+            class="text-teal-400 hover:text-teal-300">clear all filters</a>.
+          {% elif request.GET.date_from %}
+          Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}"
+            class="text-teal-400 hover:text-teal-300">clear all filters</a>.
+          {% elif request.GET.date_to %}
           Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}"
             class="text-teal-400 hover:text-teal-300">clear all filters</a>.
           {% else %}

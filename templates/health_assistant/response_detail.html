@@ -1,0 +1,341 @@
+{% extends "health_assistant/base_clean.html" %}
+
+{% block title %}Response Details{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'questionnaires:response_list' %}">Responses</a></li>
+<li class="breadcrumb-item active">Response details</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-medical-alt me-2"></i>Response Details
+                        </h5>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group">
+                            <a href="{% url 'questionnaires:response_list' %}" class="btn btn-outline-light">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                            <a href="{% url 'questionnaires:response_edit' response.pk %}" class="btn btn-light ms-2">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Response Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="text-muted mb-3"><i class="fas fa-info-circle me-2"></i>Response Information</h5>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="150" class="text-muted text-end">Questionnaire:</td>
+                                <td><strong>{{ response.questionnaire.title }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Type:</td>
+                                <td>{{ response.questionnaire.get_questionnaire_type_display|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Status:</td>
+                                <td>
+                                    {% if response.is_complete %}
+                                    <span class="badge bg-success">Complete</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">In Progress</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Started:</td>
+                                <td>{{ response.started_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Submitted:</td>
+                                <td>{{ response.submitted_at|date:"M d, Y H:i"|default:"-" }}</td>
+                            </tr>
+                            {% if response.started_at and response.submitted_at %}
+                            <tr>
+                                <td class="text-muted text-end">Duration:</td>
+                                <td>{{ response.submitted_at|timeuntil:response.started_at }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted text-end">Operator:</td>
+                                <td>
+                                    {% if response.respondent %}
+                                    {% with r=response.respondent %}
+                                    {% with name=r.get_full_name|default:r.username|default:"Unknown" %}
+                                    {{ name }}
+                                    {% endwith %}
+                                    {% endwith %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="text-muted mb-3"><i class="fas fa-user mb-2"></i>Patient Information</h5>
+                        {% if response.patient %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle p-3 me-3 text-center border"
+                                style="width: 60px; height: 60px;">
+                                <i class="fas fa-user fa-lg text-secondary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ response.patient.first_name }} {{ response.patient.last_name }}</h6>
+                                <span class="badge bg-primary mt-1">{{ response.patient.patient_id }}</span>
+                            </div>
+                        </div>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="120" class="text-muted text-end">DOB:</td>
+                                <td>{{ response.patient.date_of_birth|date:"M d, Y" }} ({{ response.patient.age }} yrs)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Gender:</td>
+                                <td>{{ response.patient.get_gender_display }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted text-end">Phone:</td>
+                                <td>{{ response.patient.phone_number|default:"-" }}</td>
+                            </tr>
+                        </table>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No patient associated with this response.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Vital Signs -->
+                <div class="row mb-5 mt-4">
+                    <div class="col-12">
+                        <h5 class="text-muted mb-3"><i class="fas fa-heartbeat me-2 text-danger"></i>Vital Signs
+                            associated</h5>
+                        {% if vitals %}
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-tachometer-alt text-danger me-3 fa-2x"></i>
+                                            <div>
+                                                <div class="small text-muted">Blood Pressure</div>
+                                                <strong class="fs-5">
+                                                    {% if vitals.blood_pressure_systolic %}
+                                                    {% if vitals.blood_pressure_diastolic %}
+                                                    {{ vitals.blood_pressure_systolic }}
+                                                    /
+                                                    {{ vitals.blood_pressure_diastolic }} mmHg
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-heartbeat text-danger me-3 fa-2x"></i>
+                                            <div>
+                                                <div class="small text-muted">Heart Rate</div>
+                                                <strong class="fs-5">
+                                                    {% if vitals.heart_rate %}
+                                                    {{ vitals.heart_rate }} bpm
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-thermometer-half text-warning me-3 fa-2x"></i>
+                                            <div>
+                                                <div class="small text-muted">Temperature</div>
+                                                <strong class="fs-5">
+                                                    {% if vitals.temperature %}
+                                                    {{ vitals.temperature }} °F
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-wind text-primary me-3 fa-2x"></i>
+                                            <div>
+                                                <div class="small text-muted">SpO₂</div>
+                                                <strong class="fs-5">
+                                                    {% if vitals.spo2 %}{{ vitals.spo2 }}%{% else %}-{% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-lungs text-info me-3 fa-2x"></i>
+                                            <div>
+                                                <div class="small text-muted">Respiratory Rate</div>
+                                                <strong class="fs-5">
+                                                    {% if vitals.respiratory_rate %}{{ vitals.respiratory_rate }}
+                                                    min⁻¹{% else %}-{% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-weight me-3 fa-2x text-secondary"></i>
+                                            <div>
+                                                <div class="small text-muted">Weight / Height / BMI</div>
+                                                <strong class="fs-6">
+                                                    {% if vitals.weight %}{{ vitals.weight }} kg{% else %}-{% endif %} /
+                                                    {% if vitals.height %}{{ vitals.height }} cm{% else %}-{% endif %} /
+                                                    {% if vitals.bmi %}{{ vitals.bmi }}{% else %}-{% endif %}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end text-muted small mt-2">
+                            {% with v_date=vitals.recorded_at|date:"M d, Y H:i" %}
+                            <i class="fas fa-clock me-1"></i>Vitals recorded at {{ v_date }}
+                            {% endwith %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No vitals have been recorded for this patient yet.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Answers -->
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="text-muted mb-3"><i class="fas fa-list-ol me-2"></i>Questionnaire Answers</h5>
+                        {% if response.answers.exists %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%" class="text-center">#</th>
+                                        <th width="45%">Question</th>
+                                        <th width="15%">Type</th>
+                                        <th width="35%">Answer provided</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for answer in response.answers.all|dictsort:"question.order" %}
+                                    <tr>
+                                        <td class="text-center font-monospace">{{ answer.question.get_display_number }}
+                                        </td>
+                                        <td>
+                                            {{ answer.question.question_text }}
+                                            {% if answer.question.is_required %}
+                                            <span class="text-danger ms-1" title="Required">*</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% with qt=answer.question.get_question_type_display %}
+                                            <span class="badge bg-secondary">{{ qt }}</span>
+                                            {% endwith %}
+                                        </td>
+                                        <td class="bg-light">
+                                            {% if answer.file_answer %}
+                                            <div class="d-flex align-items-center">
+                                                <a href="{{ answer.file_answer.url }}"
+                                                    class="btn btn-sm btn-outline-primary" download>
+                                                    <i class="fas fa-download me-1"></i> Download
+                                                </a>
+                                                <span class="ms-2">
+                                                    {{ answer.file_answer.name|truncatechars:18 }}
+                                                </span>
+                                            </div>
+                                            {% elif answer.text_answer %}
+                                            {{ answer.text_answer }}
+                                            {% elif answer.option_answer.exists %}
+                                            {% for option in answer.option_answer.all %}
+                                            {% if option.option_image %}
+                                            <div class="mb-2">
+                                                <img src="{{ option.option_image.url }}" alt="Option Image"
+                                                    class="img-thumbnail" style="max-height: 100px;">
+                                                {% if option.text %}
+                                                <span class="badge bg-info mt-1 d-block">{{ option.text }}</span>
+                                                {% endif %}
+                                            </div>
+                                            {% else %}
+                                            <span class="badge bg-info mt-1">{{ option.text }}</span>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% else %}
+                                            <span class="text-muted fst-italic">No answer recorded</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No answers found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No answers have been recorded for this response yet.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

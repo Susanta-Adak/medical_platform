@@ -1,1 +1,28 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+venv/
+env/
+ENV/
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Local data / backups
+local_backup.json
+
+# Static / Media
+staticfiles/
+media/

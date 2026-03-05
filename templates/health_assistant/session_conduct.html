@@ -1,0 +1,369 @@
+{% extends "health_assistant/base_clean.html" %}
+
+{% block title %}Conduct Screening Session{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar: Patient & Session Summary -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-medical me-2"></i>Patient Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-lg bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-3x text-secondary"></i>
+                        </div>
+                        <h4 class="mb-1">{{ session.patient.full_name }}</h4>
+                        <p class="text-muted small">ID: {{ session.patient.patient_id }}</p>
+                    </div>
+
+                    <ul class="list-group list-group-flush small">
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            <span class="text-muted">Age / Gender</span>
+                            <span class="fw-bold">{{ session.patient.age }} yrs / {{ session.patient.get_gender_display
+                                }}</span>
+                        </li>
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            <span class="text-muted">Screening Type</span>
+                            <span class="fw-bold text-primary">{{ session.screening_type.name }}</span>
+                        </li>
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            <span class="text-muted">Status</span>
+                            <span class="badge bg-info">{{ session.get_status_display }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-microchip me-2"></i>Active Device</h5>
+                </div>
+                <div class="card-body">
+                    <div id="deviceStatusPanel">
+                        {% if session.device_used %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success-subtle p-3 rounded me-3 text-success">
+                                <i class="fas fa-link fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">{{ session.device_used.name|default:"Assigned Device" }}</h6>
+                                <small class="text-muted">ID: {{ session.device_used.device_id }}</small>
+                            </div>
+                        </div>
+                        <div class="alert alert-success border-0 small py-2">
+                            <i class="fas fa-circle-check me-1"></i> Connected and Ready
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-plug fa-3x text-muted mb-3"></i>
+                            <p class="text-muted small">No device selected for this session.</p>
+                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#deviceSelectModal">
+                                Select Device
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content: Data Reception -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 fw-bold">IoT Data Collection Gateway</h5>
+                    <div class="status-indicators d-flex gap-3">
+                        <span class="small text-muted" id="mqttStatus">
+                            <i class="fas fa-circle text-danger me-1"></i> MQTT Bridge: Offline
+                        </span>
+                        <span class="small text-muted" id="httpStatus">
+                            <i class="fas fa-circle text-success me-1"></i> HTTP Service: Online
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Control Panel -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light h-100">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-file-alt text-primary me-2"></i>Text Data
+                                    (MQTT)</h6>
+                                <p class="small text-muted mb-3">Collect sensor readings or text-based diagnostics via
+                                    secured MQTT channel.</p>
+                                <div class="d-grid">
+                                    {% if not session.device_used %}
+                                    <button class="btn btn-primary" id="startListeningBtn" disabled>
+                                        <i class="fas fa-broadcast-tower me-2"></i>Listen for Data
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-primary" id="startListeningBtn">
+                                        <i class="fas fa-broadcast-tower me-2"></i>Listen for Data
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light h-100">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-image text-success me-2"></i>Images & Scans
+                                    (HTTP)</h6>
+                                <p class="small text-muted mb-3">Upload high-resolution scans or medical images directly
+                                    from hardware.</p>
+                                <div class="d-grid">
+                                    {% if not session.device_used %}
+                                    <button class="btn btn-success" id="prepImageBtn" disabled>
+                                        <i class="fas fa-camera me-2"></i>Capture Image
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-success" id="prepImageBtn">
+                                        <i class="fas fa-camera me-2"></i>Capture Image
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Data Stream -->
+                    <div class="data-stream-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-uppercase small text-muted">Recent Incoming Data</h6>
+                            <button class="btn btn-sm btn-link text-decoration-none" id="clearLogBtn">Clear Log</button>
+                        </div>
+
+                        <div id="dataLog" class="border rounded bg-dark p-3 overflow-auto"
+                            style="height: 350px; font-family: monospace; color: #00ff00;">
+                            <div class="text-white-50 small mb-2">
+                                --- SESSION INITIALIZED: {{ session.created_at|date:"Y-m-d H:i:s" }} ---
+                            </div>
+                            <div id="logContent">
+                                <div class="mb-1">> Waiting for device input...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-end py-3">
+                    <button class="btn btn-secondary me-2">Cancel Session</button>
+                    <button class="btn btn-dark" id="saveAndCompleteBtn">Save & Complete Screening</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Device Selection Modal -->
+<div class="modal fade" id="deviceSelectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select IoT Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    {% for device in devices %}
+                    <button type="button"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
+                        onclick="associateDevice({{ device.id }})">
+                        <div>
+                            <h6 class="mb-1">{{ device.name }}</h6>
+                            <small class="text-muted">{{ device.device_type }} | {{ device.device_id }}</small>
+                        </div>
+                        <span
+                            class="badge {% if device.connection_status == 'connected' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ device.get_connection_status_display }}
+                        </span>
+                    </button>
+                    {% empty %}
+                    <div class="text-center py-3">No active devices found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #dataLog::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #dataLog::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+
+    .data-entry {
+        border-left: 3px solid #00ff00;
+        padding-left: 10px;
+        margin-bottom: 8px;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let isListening = false;
+    let pollInterval = null;
+    let lastDataTime = new Date().toISOString();
+
+    const logContent = document.getElementById('logContent');
+    const dataLog = document.getElementById('dataLog');
+
+    function appendToLog(message, type = 'info') {
+        const div = document.createElement('div');
+        div.className = 'data-entry small mb-2';
+        const timestamp = new Date().toLocaleTimeString();
+
+        let color = '#00ff00'; // Success/Info
+        if (type === 'error') color = '#ff4d4d';
+        if (type === 'image') color = '#33ccff';
+
+        div.style.borderLeftColor = color;
+        div.innerHTML = `<span class="text-white-50">[${timestamp}]</span> <span style="color: ${color}">${message}</span>`;
+
+        logContent.appendChild(div);
+        dataLog.scrollTop = dataLog.scrollHeight;
+    }
+
+    async function triggerScan(scanType) {
+        if (!isListening) {
+            showAlert('Please start listening first to establish the connection.', 'warning');
+            return;
+        }
+
+        appendToLog(`Triggering ${scanType} scan on device...`, 'info');
+
+        try {
+            const data = await makeAjaxRequest(`/iot/trigger-scan/{{ session.id }}/`, 'POST', {
+                scan_type: scanType
+            });
+
+            if (data.status === 'success') {
+                appendToLog(`MQTT COMMAND SENT: ${data.topic}`, 'info');
+                // Optional: appendToLog(`PAYLOAD: ${data.payload}`, 'small');
+            } else {
+                appendToLog(`ERROR: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            appendToLog(`CONNECTION ERROR: Could not reach gateway`, 'error');
+        }
+    }
+
+    document.getElementById('startListeningBtn').addEventListener('click', function () {
+        if (!isListening) {
+            isListening = true;
+            this.innerHTML = '<i class="fas fa-stop me-2"></i>Stop Listening';
+            this.classList.replace('btn-primary', 'btn-danger');
+            document.getElementById('mqttStatus').innerHTML = '<i class="fas fa-circle text-success me-1"></i> MQTT Bridge: Active';
+            appendToLog('Establishing MQTT connection to AWS IoT Broker...');
+            appendToLog('Listening for device: {{ session.device_used.device_id }}', 'info');
+
+            // Start polling
+            pollInterval = setInterval(pollForData, 3000);
+
+            // Auto-trigger initial vitals scan
+            setTimeout(() => triggerScan('vitals'), 1000);
+        } else {
+            stopListening();
+        }
+    });
+
+    function stopListening() {
+        isListening = false;
+        const btn = document.getElementById('startListeningBtn');
+        btn.innerHTML = '<i class="fas fa-broadcast-tower me-2"></i>Listen for Data';
+        btn.classList.replace('btn-danger', 'btn-primary');
+        document.getElementById('mqttStatus').innerHTML = '<i class="fas fa-circle text-danger me-1"></i> MQTT Bridge: Offline';
+        appendToLog('MQTT Connection closed.');
+        clearInterval(pollInterval);
+    }
+
+    function pollForData() {
+        fetch(`/iot/check-session-data/{{ session.id }}/`)
+            .then(r => r.json())
+            .then(data => {
+                // Handle new readings
+                data.readings.forEach(reading => {
+                    if (reading.time > lastDataTime) {
+                        if (reading.type === 'image') {
+                            appendToLog(`NEW IMAGE RECEIVED: <a href="${reading.data.value}" target="_blank" style="color: #33ccff">View Scan</a>`, 'image');
+                        } else {
+                            appendToLog(`NEW READING [${reading.type}]: ${JSON.stringify(reading.data.value)}`);
+                        }
+                    }
+                });
+
+                // Handle new attachments
+                data.attachments.forEach(att => {
+                    if (att.time > lastDataTime) {
+                        appendToLog(`NEW IMAGE RECEIVED: <a href="${att.url}" target="_blank" style="color: #33ccff">View Scan</a>`, 'image');
+                    }
+                });
+
+                if (data.readings.length || data.attachments.length) {
+                    const latest = [...data.readings, ...data.attachments].sort((a, b) => b.time.localeCompare(a.time))[0];
+                    if (latest) lastDataTime = latest.time;
+                }
+            });
+    }
+
+    function associateDevice(deviceId) {
+        const formData = new FormData();
+        formData.append('device_id', deviceId);
+
+        fetch(`/health-assistant/api/session/{{ session.id }}/associate-device/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    document.getElementById('saveAndCompleteBtn').addEventListener('click', function () {
+        if (confirm('Complete this screening session? All received IoT data will be locked to this session.')) {
+            // Trigger completion by hitting the endpoint
+            window.location.href = "{% url 'screening:session_complete' session.id %}";
+        }
+    });
+
+    document.getElementById('clearLogBtn').addEventListener('click', () => {
+        logContent.innerHTML = '<div class="mb-1">> Log cleared. Waiting for input...</div>';
+    });
+
+    document.getElementById('prepImageBtn').addEventListener('click', () => {
+        triggerScan('image');
+    });
+</script>
+{% endblock %}

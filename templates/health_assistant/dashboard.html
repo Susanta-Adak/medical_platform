@@ -2,7 +2,7 @@
 
 {% block page_title %}Health Assistant Dashboard{% endblock %}
 
-{% block health_assistant_content %}
+{% block content %}
 <div class="row">
     <!-- Welcome Section -->
     <div class="col-12 mb-4">
@@ -10,7 +10,7 @@
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h2 class="mb-1"color: #000000;>Welcome back, {{ user.first_name }}!</h2>
+                        <h2 class="mb-1" style="color: #000000;">Welcome back, {{ user.first_name }}!</h2>
                         <p class="text-muted mb-0">Here's your screening overview for today</p>
                     </div>
                     <div class="col-md-4 text-end">
@@ -41,7 +41,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card">
             <div class="card-body">
@@ -57,7 +57,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card">
             <div class="card-body">
@@ -73,7 +73,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card">
             <div class="card-body">
@@ -103,7 +103,7 @@
             <p class="text-muted mb-0">Add a new patient to the system</p>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="quick-action-card" onclick="window.location.href='{% url 'health_assistant:screening_session' %}'">
             <i class="fas fa-stethoscope"></i>
@@ -111,7 +111,7 @@
             <p class="text-muted mb-0">Begin a new screening session</p>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="quick-action-card" onclick="window.location.href='{% url 'health_assistant:my_sessions' %}'">
             <i class="fas fa-history"></i>
@@ -119,7 +119,7 @@
             <p class="text-muted mb-0">Review your screening history</p>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="quick-action-card" onclick="window.location.href='#'">
             <i class="fas fa-heartbeat"></i>
@@ -140,67 +140,67 @@
             </div>
             <div class="card-body">
                 {% if recent_sessions %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Patient</th>
-                                    <th>Screening Type</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for session in recent_sessions %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="patient-info me-3">
-                                                <strong>{{ session.patient.name }}</strong>
-                                                <br>
-                                                <small class="text-muted">ID: {{ session.patient.external_id }}</small>
-                                            </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Screening Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="patient-info me-3">
+                                            <strong>{{ session.patient.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">ID: {{ session.patient.external_id }}</small>
                                         </div>
-                                    </td>
-                                    <td>{{ session.product.name }}</td>
-                                    <td>
-                                        <span class="status-badge status-{{ session.status|lower }}">
-                                            {{ session.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ session.created_at|date:"M d, Y H:i" }}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="#" class="btn btn-outline-primary" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            {% if session.status == 'in_progress' %}
-                                            <a href="#" class="btn btn-outline-success" title="Continue Session">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </td>
+                                <td>{{ session.product.name }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ session.status|lower }}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ session.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if session.status == 'in_progress' %}
+                                        <a href="#" class="btn btn-outline-success" title="Continue Session">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No recent sessions</h5>
-                        <p class="text-muted">Start your first screening session to see it here</p>
-                        <a href="{% url 'health_assistant:screening_session' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Start Screening
-                        </a>
-                    </div>
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No recent sessions</h5>
+                    <p class="text-muted">Start your first screening session to see it here</p>
+                    <a href="{% url 'health_assistant:screening_session' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Start Screening
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
-    
+
     <!-- Device Status -->
     <div class="col-md-4">
         <div class="card">
@@ -211,34 +211,35 @@
             </div>
             <div class="card-body">
                 {% if devices %}
-                    {% for device in devices %}
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <i class="fas fa-heartbeat fa-2x {% if device.is_connected %}text-success{% else %}text-danger{% endif %}"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">{{ device.name }}</h6>
-                                <small class="text-muted">{{ device.model }}</small>
-                            </div>
+                {% for device in devices %}
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i
+                                class="fas fa-heartbeat fa-2x {% if device.is_connected %}text-success{% else %}text-danger{% endif %}"></i>
                         </div>
-                        <div class="text-end">
-                            <span class="badge {% if device.is_connected %}bg-success{% else %}bg-danger{% endif %}">
-                                {% if device.is_connected %}Connected{% else %}Disconnected{% endif %}
-                            </span>
+                        <div>
+                            <h6 class="mb-0">{{ device.name }}</h6>
+                            <small class="text-muted">{{ device.model }}</small>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="text-end">
+                        <span class="badge {% if device.is_connected %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if device.is_connected %}Connected{% else %}Disconnected{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-microchip fa-3x text-muted mb-3"></i>
-                        <h6 class="text-muted">No devices configured</h6>
-                        <p class="text-muted small">Contact admin to set up screening devices</p>
-                    </div>
+                <div class="text-center py-4">
+                    <i class="fas fa-microchip fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No devices configured</h6>
+                    <p class="text-muted small">Contact admin to set up screening devices</p>
+                </div>
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- System Alerts -->
         <div class="card mt-3">
             <div class="card-header">
@@ -248,16 +249,16 @@
             </div>
             <div class="card-body">
                 {% if alerts %}
-                    {% for alert in alerts %}
-                    <div class="alert alert-{{ alert.type }} alert-sm mb-2">
-                        <small><strong>{{ alert.title }}</strong><br>{{ alert.message }}</small>
-                    </div>
-                    {% endfor %}
+                {% for alert in alerts %}
+                <div class="alert alert-{{ alert.type }} alert-sm mb-2">
+                    <small><strong>{{ alert.title }}</strong><br>{{ alert.message }}</small>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="text-center py-3">
-                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                        <p class="text-muted mb-0">All systems operational</p>
-                    </div>
+                <div class="text-center py-3">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <p class="text-muted mb-0">All systems operational</p>
+                </div>
                 {% endif %}
             </div>
         </div>

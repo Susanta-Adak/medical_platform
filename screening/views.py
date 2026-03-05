@@ -146,7 +146,12 @@ class ScreeningSessionDetailView(LoginRequiredMixin, UserPassesTestMixin, Detail
     context_object_name = 'session'
     
     def test_func(self):
-        return self.request.user.is_staff
+        user = self.request.user
+        if user.is_staff or getattr(user, 'is_super_admin', False):
+            return True
+        if getattr(user, 'is_health_assistant', False) or getattr(user, 'is_doctor', False):
+            return True
+        return False
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -244,9 +249,15 @@ def start_screening(request, pk):
 def complete_screening(request, pk):
     session = get_object_or_404(ScreeningSession, pk=pk)
     
+    redirect_url = 'screening:session_detail'
+    if hasattr(request.user, 'role') and request.user.role == request.user.Role.HEALTH_ASSISTANT:
+        redirect_url = 'health_assistant:session_overview'
+    
     if not session.can_complete():
         messages.error(request, 'This screening cannot be completed at this time.')
-        return redirect('screening:session_detail', pk=session.pk)
+        if redirect_url == 'health_assistant:session_overview':
+            return redirect(redirect_url, session_id=session.pk)
+        return redirect(redirect_url, pk=session.pk)
     
     session.status = ScreeningSession.STATUS_COMPLETED
     session.actual_end_time = timezone.now()
@@ -262,6 +273,9 @@ def complete_screening(request, pk):
             device.save(update_fields=['is_locked', 'is_busy', 'locked_session_id'])
     
     messages.success(request, 'Screening session marked as completed.')
+    
+    if hasattr(request.user, 'role') and request.user.role == request.user.Role.HEALTH_ASSISTANT:
+        return redirect('health_assistant:session_overview', session_id=session.pk)
     return redirect('screening:session_detail', pk=session.pk)
 
 

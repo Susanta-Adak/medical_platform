@@ -138,25 +138,32 @@
     </div>
     {% endif %}
 
-    <!-- Attachments -->
+    <!-- Attachments (S3 Remote Storage) -->
     {% if session.attachments.exists %}
-    <div class="card">
+    <div class="card mb-8">
         <div class="card-header">
-            <h2 class="text-lg font-semibold text-black">Attachments</h2>
+            <h2 class="text-lg font-semibold text-black">Data Attachments</h2>
         </div>
         <div class="card-body">
             <div class="space-y-4">
                 {% for attachment in session.attachments.all %}
-                <div class="flex items-center justify-between p-4 border border-gray-700 rounded-lg">
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <div class="flex items-center">
-                        <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                        {% if attachment.file_type == 'application/zip' %}
+                        <i class="fas fa-file-archive text-purple-500 text-xl mr-3"></i>
+                        {% else %}
+                        <i class="fas fa-file-alt text-gray-400 text-xl mr-3"></i>
+                        {% endif %}
                         <div>
-                            <p class="text-black font-medium">{{ attachment.title }}</p>
-                            <p class="text-gray-400 text-sm">{{ attachment.description|default:"No description" }}</p>
+                            <p class="text-black font-medium">{{ attachment.file.name|slice:"15:"|default:"Attached
+                                File" }}</p>
+                            <p class="text-gray-500 text-sm">{{ attachment.description|default:"No description" }}</p>
                         </div>
                     </div>
-                    <a href="{{ attachment.file.url }}" class="btn btn-secondary btn-sm" download>
-                        <i class="fas fa-download mr-2"></i> Download
+                    <!-- Downloading attachment.file.url securely leverages Boto3 to generate a 1-hour presigned AWS URL! -->
+                    <a href="{{ attachment.file.url }}" class="btn btn-primary btn-sm" target="_blank"
+                        rel="noopener noreferrer">
+                        <i class="fas fa-cloud-download-alt mr-2"></i> Download from S3
                     </a>
                 </div>
                 {% endfor %}

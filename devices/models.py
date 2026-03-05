@@ -111,6 +111,11 @@ class Device(models.Model):
         related_name='assigned_devices',
         help_text='User currently assigned to this device'
     )
+    assigned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the device was assigned to the user'
+    )
     location = models.CharField(
         max_length=200, 
         blank=True,

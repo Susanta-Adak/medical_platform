@@ -3,370 +3,423 @@
 {% block page_title %}Response Details{% endblock %}
 
 {% block admin_content %}
-<div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 style="margin:0; color: #000000;">Response Details</h2>
-        <div class="btn-group">
-          <a href="{% url 'questionnaires:response_list' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
-          </a>
-          <a class="btn btn-danger" href="{% url 'questionnaires:response_delete' response.pk %}">
-            <i class="fas fa-trash"></i> Delete
-          </a>
-        </div>
-      </div>
-      <div class="card-body">
-        <!-- Response Information -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">Response Information</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Questionnaire:</strong></td>
-                <td>{{ response.questionnaire.title }}</td>
-              </tr>
-              <tr>
-                <td><strong>Questionnaire Type:</strong></td>
-                <td>{{ response.questionnaire.get_questionnaire_type_display|default:"-" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Status:</strong></td>
-                <td>
-                  {% if response.is_complete %}
-                  <span class="badge bg-success">Complete</span>
-                  {% else %}
-                  <span class="badge bg-warning">In Progress</span>
-                  {% endif %}
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Started:</strong></td>
-                <td>{{ response.started_at|date:"Y-m-d H:i:s" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Submitted:</strong></td>
-                <td>{{ response.submitted_at|date:"Y-m-d H:i:s"|default:"-" }}</td>
-              </tr>
-              {% if response.started_at and response.submitted_at %}
-              <tr>
-                <td><strong>Duration:</strong></td>
-                <td>{{ response.submitted_at|timeuntil:response.started_at }}</td>
-              </tr>
-              {% endif %}
-              <tr>
-                <td><strong>Respondent:</strong></td>
-                <td>
-                  {% if response.respondent %}
-                  {{ response.respondent.get_full_name|default:response.respondent.username|default:"Unknown" }}
-                  {% if response.respondent.role %}
-                  <span class="badge bg-info ms-1">{{ response.respondent.get_role_display }}</span>
-                  {% endif %}
-                  {% else %}
-                  -
-                  {% endif %}
-                </td>
-              </tr>
-            </table>
-          </div>
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">
+      <i class="fas fa-file-medical-alt mr-3 text-teal-600"></i>Response Details
+    </h1>
+    <div class="flex space-x-3">
+      <a href="{% url 'questionnaires:response_list' %}"
+        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 flex items-center transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to List
+      </a>
+      <a href="{% url 'questionnaires:response_edit' response.pk %}"
+        class="px-4 py-2 rounded-lg text-white bg-teal-600 hover:bg-teal-700 flex items-center transition">
+        <i class="fas fa-edit mr-2"></i> Edit
+      </a>
+      <a href="{% url 'questionnaires:response_delete' response.pk %}"
+        class="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 flex items-center transition">
+        <i class="fas fa-trash mr-2"></i> Delete
+      </a>
+    </div>
+  </div>
 
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">Patient Information</h5>
-            {% if response.patient %}
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Patient ID:</strong></td>
-                <td><span class="badge bg-primary">{{ response.patient.patient_id }}</span></td>
-              </tr>
-              <tr>
-                <td><strong>Name:</strong></td>
-                <td>{{ response.patient.first_name }} {{ response.patient.last_name }}</td>
-              </tr>
-              <tr>
-                <td><strong>Date of Birth:</strong></td>
-                <td>{{ response.patient.date_of_birth|date:"Y-m-d" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Age:</strong></td>
-                <td>{{ response.patient.age }} years</td>
-              </tr>
-              <tr>
-                <td><strong>Gender:</strong></td>
-                <td>{{ response.patient.get_gender_display }}</td>
-              </tr>
-              <tr>
-                <td><strong>Phone:</strong></td>
-                <td>{{ response.patient.phone_number|default:"-" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Email:</strong></td>
-                <td>{{ response.patient.email|default:"-" }}</td>
-              </tr>
-            </table>
-            {% else %}
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              No patient associated with this response.
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <div class="p-6 md:p-8">
+
+      <!-- Info Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+
+        <!-- Response Information -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100">
+            <i class="fas fa-info-circle mr-2 text-teal-500"></i>Response Information
+          </h2>
+          <div class="space-y-3">
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Questionnaire:</span>
+              <span class="w-2/3 font-semibold text-gray-900">{{ response.questionnaire.title }}</span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Type:</span>
+              <span class="w-2/3 text-gray-700">
+                {% if response.questionnaire.get_questionnaire_type_display %}
+                {{ response.questionnaire.get_questionnaire_type_display }}
+                {% else %}
+                -
+                {% endif %}
+              </span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Status:</span>
+              <span class="w-2/3">
+                {% if response.is_complete %}
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Complete
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  In Progress
+                </span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Started:</span>
+              <span class="w-2/3 text-gray-700">{{ response.started_at|date:"M d, Y H:i" }}</span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Submitted:</span>
+              <span class="w-2/3 text-gray-700">
+                {% if response.submitted_at %}
+                {{ response.submitted_at|date:"M d, Y H:i" }}
+                {% else %}
+                -
+                {% endif %}
+              </span>
+            </div>
+            {% if response.started_at and response.submitted_at %}
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Duration:</span>
+              <span class="w-2/3 text-gray-700">{{ response.submitted_at|timeuntil:response.started_at }}</span>
             </div>
             {% endif %}
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Operator:</span>
+              <span class="w-2/3 text-gray-700">
+                {% if response.respondent %}
+                {% with r=response.respondent %}
+                {{ r.get_full_name|default:r.username|default:"Unknown" }}
+                {% endwith %}
+                {% if response.respondent.role %}
+                <span
+                  class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ response.respondent.get_role_display }}
+                </span>
+                {% endif %}
+                {% else %}
+                -
+                {% endif %}
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Vital Signs -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="text-muted mb-3"><i class="fas fa-heartbeat me-2 text-danger"></i>Vital Signs</h5>
-            {% if vitals %}
-            <div class="row">
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-tachometer-alt text-danger me-3 fa-lg"></i>
-                      <div>
-                        <div class="small text-muted">Blood Pressure</div>
-                        <strong>
-                          {% if vitals.blood_pressure_systolic and vitals.blood_pressure_diastolic %}
-                          {{ vitals.blood_pressure_systolic }}/{{ vitals.blood_pressure_diastolic }} mmHg
-                          {% else %}-{% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-heartbeat text-danger me-3 fa-lg"></i>
-                      <div>
-                        <div class="small text-muted">Heart Rate</div>
-                        <strong>
-                          {% if vitals.heart_rate %}{{ vitals.heart_rate }} bpm{% else %}-{% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-lungs text-info me-3 fa-lg"></i>
-                      <div>
-                        <div class="small text-muted">Respiratory Rate</div>
-                        {% if vitals.respiratory_rate %}
-                        {{ vitals.respiratory_rate }} breaths/min
-                        {% else %}
-                        -
-                        {% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-thermometer-half text-warning me-3 fa-lg"></i>
-                      <div>
-                        <div class="small text-muted">Temperature</div>
-                        <strong>
-                          {% if vitals.temperature %}{{ vitals.temperature }} °C{% else %}-{% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-wind text-primary me-3 fa-lg"></i>
-                      <div>
-                        <div class="small text-muted">SpO₂</div>
-                        <strong>
-                          {% if vitals.spo2 %}{{ vitals.spo2 }}%{% else %}-{% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card border-0 bg-light mb-3">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-weight me-3 fa-lg text-secondary"></i>
-                      <div>
-                        <div class="small text-muted">Weight / Height / BMI</div>
-                        <strong>
-                          {% if vitals.weight %}{{ vitals.weight }} kg{% else %}-{% endif %} /
-                          {% if vitals.height %}{{ vitals.height }} cm{% else %}-{% endif %} /
-                          {% if vitals.bmi %}{{ vitals.bmi }}{% else %}-{% endif %}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <!-- Patient Information -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100">
+            <i class="fas fa-user mr-2 text-blue-500"></i>Patient Information
+          </h2>
+          {% if response.patient %}
+          <div class="flex items-center mb-5 bg-gray-50 p-4 rounded-lg">
+            <div
+              class="h-14 w-14 rounded-full bg-white border border-gray-200 flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-user text-2xl text-gray-400"></i>
             </div>
-            <div class="text-muted small mt-1">
-              <i class="fas fa-clock me-1"></i>Recorded at {{ vitals.recorded_at|date:"Y-m-d H:i" }}
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">
+                {{ response.patient.first_name }}
+                {{ response.patient.last_name }}
+              </h3>
+              <span
+                class="inline-flex mt-1 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                {{ response.patient.patient_id }}
+              </span>
             </div>
-
+          </div>
+          <div class="space-y-3 px-2">
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">DOB:</span>
+              <span class="w-2/3 text-gray-700">
+                {{ response.patient.date_of_birth|date:"M d, Y" }}
+                ({{ response.patient.age }} yrs)
+              </span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Gender:</span>
+              <span class="w-2/3 text-gray-700">{{ response.patient.get_gender_display }}</span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Phone:</span>
+              <span class="w-2/3 text-gray-700">{{ response.patient.phone_number|default:"-" }}</span>
+            </div>
+            <div class="flex">
+              <span class="w-1/3 text-gray-500 font-medium">Email:</span>
+              <span class="w-2/3 text-gray-700">{{ response.patient.email|default:"-" }}</span>
+            </div>
           </div>
           {% else %}
-          <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            No vitals have been recorded for this patient yet.
+          <div class="bg-yellow-50 text-yellow-800 p-4 rounded-lg flex items-start">
+            <i class="fas fa-exclamation-triangle mt-0.5 mr-3"></i>
+            <p>No patient associated with this response.</p>
           </div>
           {% endif %}
         </div>
       </div>
 
-      <!-- Technical Details -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <h5 class="text-muted mb-3">Technical Details</h5>
-          <div class="row">
-            <div class="col-md-6">
-              <table class="table table-sm">
-                <tr>
-                  <td><strong>IP Address:</strong></td>
-                  <td>{{ response.ip_address|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td><strong>User Agent:</strong></td>
-                  <td class="text-break">{{ response.user_agent|default:"-" }}</td>
-                </tr>
-              </table>
+      <!-- Vital Signs -->
+      <div class="mb-10">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100">
+          <i class="fas fa-heartbeat mr-2 text-red-500"></i>Vital Signs associated
+        </h2>
+        {% if vitals %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <div class="bg-red-50 border border-red-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-tachometer-alt text-xl text-red-500"></i>
             </div>
-            <div class="col-md-6">
-              <table class="table table-sm">
-                <tr>
-                  <td><strong>Response ID:</strong></td>
-                  <td>{{ response.id }}</td>
-                </tr>
-                <tr>
-                  <td><strong>Session:</strong></td>
-                  <td>{{ response.session|default:"-" }}</td>
-                </tr>
-              </table>
+            <div>
+              <p class="text-xs font-medium text-red-800 uppercase tracking-wider mb-1">Blood Pressure</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% with s=vitals.blood_pressure_systolic d=vitals.blood_pressure_diastolic %}
+                {% if s and d %}
+                {{ s }}/{{ d }} <span class="text-sm font-normal text-gray-500">mmHg</span>
+                {% else %}
+                -
+                {% endif %}
+                {% endwith %}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-pink-50 border border-pink-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-heartbeat text-xl text-pink-500"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-pink-800 uppercase tracking-wider mb-1">Heart Rate</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% if vitals.heart_rate %}{{ vitals.heart_rate }} <span
+                  class="text-sm font-normal text-gray-500">bpm</span>{% else %}-{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-orange-50 border border-orange-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-thermometer-half text-xl text-orange-500"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-orange-800 uppercase tracking-wider mb-1">Temperature</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% if vitals.temperature %}{{ vitals.temperature }} <span
+                  class="text-sm font-normal text-gray-500">°F</span>{% else %}-{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-wind text-xl text-blue-500"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-blue-800 uppercase tracking-wider mb-1">SpO₂</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% if vitals.spo2 %}
+                {{ vitals.spo2 }}<span class="text-sm font-normal text-gray-500">%</span>
+                {% else %}
+                -
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-teal-50 border border-teal-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-lungs text-xl text-teal-600"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-teal-800 uppercase tracking-wider mb-1">Respiratory Rate</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% if vitals.respiratory_rate %}{{ vitals.respiratory_rate }} <span
+                  class="text-sm font-normal text-gray-500">min⁻¹</span>{% else %}-{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-purple-50 border border-purple-100 rounded-lg p-4 flex items-center">
+            <div class="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4 shadow-sm">
+              <i class="fas fa-weight text-xl text-purple-500"></i>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-purple-800 uppercase tracking-wider mb-1">Weight / Height / BMI</p>
+              <p class="text-lg font-bold text-gray-900">
+                {% if vitals.weight %}{{ vitals.weight }}<span
+                  class="text-xs font-normal text-gray-500 mr-1">kg</span>{% else %}-{% endif %} /
+                {% if vitals.height %}{{ vitals.height }}<span
+                  class="text-xs font-normal text-gray-500 mr-1">cm</span>{% else %}-{% endif %} /
+                {% if vitals.bmi %}{{ vitals.bmi }}{% else %}-{% endif %}
+              </p>
+            </div>
+          </div>
+
+        </div>
+        <div class="mt-3 text-right text-sm text-gray-500 flex justify-end items-center">
+          <i class="fas fa-clock mr-1.5"></i> Recorded at {{ vitals.recorded_at|date:"M d, Y H:i" }}
+        </div>
+        {% else %}
+        <div class="bg-yellow-50 text-yellow-800 p-4 rounded-lg flex items-start">
+          <i class="fas fa-exclamation-triangle mt-0.5 mr-3"></i>
+          <p>No vitals have been recorded for this patient yet.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Technical Details -->
+      <div class="mb-10">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100">
+          <i class="fas fa-server mr-2 text-gray-500"></i>Technical Details
+        </h2>
+        <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="flex">
+                <span class="w-1/3 text-gray-500 font-medium">IP Address:</span>
+                <span class="w-2/3 text-gray-700 font-mono text-sm">{{ response.ip_address|default:"-" }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-1/3 text-gray-500 font-medium">User Agent:</span>
+                <span class="w-2/3 text-gray-700 text-xs break-all">{{ response.user_agent|default:"-" }}</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex">
+                <span class="w-1/3 text-gray-500 font-medium">Response ID:</span>
+                <span class="w-2/3 text-gray-700">{{ response.id }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-1/3 text-gray-500 font-medium">Session ID:</span>
+                <span class="w-2/3 text-gray-700">{{ response.session|default:"-" }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Answers -->
-      <div class="row">
-        <div class="col-12">
-          <h5 class="text-muted mb-3">Questionnaire Answers</h5>
-          {% if response.answers.exists %}
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th width="5%">#</th>
-                  <th width="45%">Question</th>
-                  <th width="15%">Type</th>
-                  <th width="35%">Answer</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for answer in response.answers.all|dictsort:"question.order" %}
-                <tr>
-                  <td>{{ answer.question.get_display_number }}</td>
-                  <td>
-                    <strong>{{ answer.question.question_text }}</strong>
-                    {% if answer.question.is_required %}
-                    <span class="badge bg-danger ms-1">Required</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <span class="badge bg-secondary">{{ answer.question.get_question_type_display }}</span>
-                  </td>
-                  <td>
-                    {% if answer.file_answer %}
-                    <div class="d-flex align-items-center">
-                      <i class="fas fa-file me-2 text-primary"></i>
-                      <a href="{{ answer.file_answer.url }}" class="btn btn-sm btn-outline-primary me-2" download>
-                        <i class="fas fa-download me-1"></i> Download
-                      </a>
-                      <span class="text-muted">{{ answer.file_answer.name }}</span>
-                      <small class="text-muted ms-2">({{ answer.file_answer.size|filesizeformat }})</small>
-                    </div>
-                    {% elif answer.text_answer %}
-                    {{ answer.text_answer }}
-                    {% elif answer.option_answer.exists %}
-                    {% for option in answer.option_answer.all %}
-                    <span class="badge bg-info">{{ option.text }}</span>
-                    {% endfor %}
-                    {% else %}
-                    <span class="text-muted">No answer provided</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center text-muted">No answers found.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100">
+          <i class="fas fa-list-ol mr-2 text-indigo-500"></i>Questionnaire Answers
+        </h2>
 
-          <!-- Statistics -->
-          <div class="row mt-3">
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body text-center">
-                  <h4 class="mb-1">{{ response.answers.count }}</h4>
-                  <small class="text-muted">Questions Answered</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body text-center">
-                  <h4 class="mb-1">{{ response.questionnaire.questions.count }}</h4>
-                  <small class="text-muted">Total Questions</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body text-center">
-                  <h4 class="mb-1">
-                    {% with answered=response.answers.count total=response.questionnaire.questions.count %}
-                    {% if total > 0 %}
-                    {% widthratio answered total 100 %}%
-                    {% else %}
-                    0%
-                    {% endif %}
-                    {% endwith %}
-                  </h4>
-                  <small class="text-muted">Completion Rate</small>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% else %}
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            No answers have been recorded for this response yet.
-          </div>
-          {% endif %}
+        {% if response.answers.exists %}
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-16 text-center">
+                  #</th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-5/12">
+                  Question</th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-2/12">Type
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-4/12">Answer
+                  provided</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for answer in response.answers.all|dictsort:"question.order" %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-center font-mono text-sm text-gray-500">
+                  {{ answer.question.get_display_number }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <span class="font-medium">{{ answer.question.question_text }}</span>
+                  {% if answer.question.is_required %}
+                  <span class="text-red-500 ml-1" title="Required">*</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ answer.question.get_question_type_display }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  {% if answer.file_answer %}
+                  <div class="flex items-center">
+                    <a href="{{ answer.file_answer.url }}"
+                      class="inline-flex items-center px-3 py-1.5 border border-indigo-200 shadow-sm text-xs font-medium rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                      download>
+                      <i class="fas fa-download mr-1.5"></i> Download
+                    </a>
+                    <span class="ml-3 text-gray-600 truncate max-w-xs">
+                      {{ answer.file_answer.name|truncatechars:20 }}
+                    </span>
+                  </div>
+                  {% elif answer.text_answer %}
+                  <div class="text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-line">
+                    {{ answer.text_answer }}
+                  </div>
+                  {% elif answer.option_answer.exists %}
+                  <div class="flex flex-wrap gap-1">
+                    {% for option in answer.option_answer.all %}
+                      {% if option.option_image %}
+                      <div class="mb-2 flex flex-col items-center">
+                          <img src="{{ option.option_image.url }}" alt="Option Image" class="img-thumbnail rounded shadow-sm mb-1" style="max-height: 100px;">
+                          {% if option.text %}
+                          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100">{{ option.text }}</span>
+                          {% endif %}
+                      </div>
+                      {% else %}
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100">{{ option.text }}</span>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% else %}
+                  <span class="text-gray-400 italic">No answer recorded</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
+
+        <!-- Statistics -->
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div
+            class="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center flex flex-col items-center justify-center">
+            <span class="text-3xl font-bold text-teal-600 mb-1">{{ response.answers.count }}</span>
+            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Questions Answered</span>
+          </div>
+          <div
+            class="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center flex flex-col items-center justify-center">
+            <span class="text-3xl font-bold text-indigo-600 mb-1">{{ response.questionnaire.questions.count }}</span>
+            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Questions</span>
+          </div>
+          <div
+            class="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center flex flex-col items-center justify-center">
+            <span class="text-3xl font-bold text-green-600 mb-1">
+              {% with answered=response.answers.count total=response.questionnaire.questions.count %}
+              {% if total > 0 %}
+              {% widthratio answered total 100 %}%
+              {% else %}
+              0%
+              {% endif %}
+              {% endwith %}
+            </span>
+            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Completion Rate</span>
+          </div>
+        </div>
+
+        {% else %}
+        <div class="bg-blue-50 border border-blue-100 text-blue-800 p-6 rounded-lg text-center">
+          <i class="fas fa-info-circle text-3xl mb-3 text-blue-400"></i>
+          <p class="text-lg">No answers have been recorded for this response yet.</p>
+        </div>
+        {% endif %}
       </div>
+
     </div>
   </div>
-</div>
 </div>
 {% endblock %}

@@ -8,6 +8,11 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
+import json
+from django.utils.dateformat import DateFormat
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from accounts.models import User
 from patients.models import Patient, PatientVitals
@@ -77,8 +82,11 @@ class HealthAssistantDashboardView(HealthAssistantRequiredMixin, TemplateView):
             created_by=user
         ).select_related('patient', 'screening_type').order_by('-created_at')[:10]
         
-        # Device status
-        context['devices'] = Device.objects.filter(status=Device.STATUS_ACTIVE).order_by('name')
+        # Device status (Only show available devices, or ones already assigned to this HA)
+        context['devices'] = Device.objects.filter(
+            Q(assigned_to__isnull=True) | Q(assigned_to=user),
+            status=Device.STATUS_ACTIVE
+        ).order_by('name')
         
         # System alerts (placeholder for now)
         context['alerts'] = []
@@ -258,6 +266,58 @@ def my_sessions(request):
         'date_from': date_from,
         'date_to': date_to
     })
+
+
+@login_required
+def session_detail(request, session_id):
+    """View and conduct an active screening session with IoT device integration."""
+    if request.user.role != User.Role.HEALTH_ASSISTANT:
+        messages.error(request, 'Access denied. Health assistant role required.')
+        return redirect('login')
+    
+    session = get_object_or_404(ScreeningSession, id=session_id)
+    devices = Device.objects.filter(status=Device.STATUS_ACTIVE)
+
+    return render(request, 'health_assistant/session_conduct.html', {
+        'session': session,
+        'devices': devices,
+    })
+
+
+@login_required
+def session_overview(request, session_id):
+    """View a completed screening session overview specifically for Health Assistants."""
+    if request.user.role != User.Role.HEALTH_ASSISTANT:
+        messages.error(request, 'Access denied. Health assistant role required.')
+        return redirect('login')
+    
+    session = get_object_or_404(ScreeningSession, id=session_id)
+    
+    return render(request, 'health_assistant/session_overview.html', {
+        'session': session,
+    })
+
+
+@login_required
+def api_associate_device(request, session_id):
+    """API to associate or change the device for a session"""
+    if request.user.role != User.Role.HEALTH_ASSISTANT:
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            device_id = request.POST.get('device_id')
+            session = get_object_or_404(ScreeningSession, id=session_id)
+            device = get_object_or_404(Device, id=device_id)
+            
+            session.device_used = device
+            session.save()
+            
+            return JsonResponse({'success': True, 'message': f'Device {device.name} associated.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 # API Endpoints
@@ -553,41 +613,47 @@ def export_patients_csv(query, gender, date_from, date_to):
 
 
 @login_required
-def api_get_screening_types(request):
-    """API endpoint to get available screening types"""
+def api_get_products(request):
+    """API endpoint to get available screening products (types)"""
     if request.user.role != User.Role.HEALTH_ASSISTANT:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     screening_types = ScreeningType.objects.filter(is_active=True)
     
-    screening_type_data = []
-    for screening_type in screening_types:
-        screening_type_data.append({
-            'id': screening_type.id,
-            'name': screening_type.name,
-            'description': screening_type.description
+    product_data = []
+    for st in screening_types:
+        # Count available questionnaires
+        q_count = 0
+        if st.pre_screening_questionnaire: q_count += 1
+        if st.post_screening_questionnaire: q_count += 1
+        
+        product_data.append({
+            'id': st.id,
+            'name': st.name,
+            'description': st.description,
+            'questionnaires_count': q_count
         })
     
-    return JsonResponse({'screening_types': screening_type_data})
+    return JsonResponse({'products': product_data})
 
 
 @login_required
-def api_get_screening_type(request, screening_type_id):
-    """API endpoint to get screening type details"""
+def api_get_product(request, product_id):
+    """API endpoint to get screening product details"""
     if request.user.role != User.Role.HEALTH_ASSISTANT:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     try:
-        screening_type = ScreeningType.objects.get(id=screening_type_id)
+        st = ScreeningType.objects.get(id=product_id)
         return JsonResponse({
-            'screening_type': {
-                'id': screening_type.id,
-                'name': screening_type.name,
-                'description': screening_type.description
+            'product': {
+                'id': st.id,
+                'name': st.name,
+                'description': st.description
             }
         })
     except ScreeningType.DoesNotExist:
-        return JsonResponse({'error': 'Screening type not found'}, status=404)
+        return JsonResponse({'error': 'Product not found'}, status=404)
 
 
 @login_required
@@ -640,9 +706,16 @@ def api_create_session(request):
     
     if request.method == 'POST':
         try:
-            patient_id = request.POST.get('patient_id')
-            screening_type_id = request.POST.get('screening_type_id')
-            device_id = request.POST.get('device_id')
+            import json
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                patient_id = data.get('patient_id')
+                screening_type_id = data.get('screening_type_id')
+                device_id = data.get('device_id')
+            else:
+                patient_id = request.POST.get('patient_id')
+                screening_type_id = request.POST.get('screening_type_id')
+                device_id = request.POST.get('device_id')
             
             # Validate inputs
             if not all([patient_id, screening_type_id, device_id]):
@@ -657,13 +730,17 @@ def api_create_session(request):
             if device.connection_status != Device.CONNECTION_CONNECTED or device.is_busy:
                 return JsonResponse({'error': 'Device is not connected'}, status=400)
             
+            from django.utils import timezone
             # Create session
             session = ScreeningSession.objects.create(
                 patient=patient,
                 screening_type=screening_type,
-                device=device,
+                device_used=device,
                 created_by=request.user,
-                status='in_progress'
+                status='in_progress',
+                scheduled_date=timezone.now(),
+                consent_obtained=True,
+                consented_at=timezone.now()
             )
             
             return JsonResponse({

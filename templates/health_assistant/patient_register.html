@@ -2,7 +2,7 @@
 
 {% block page_title %}Patient Registration{% endblock %}
 
-{% block health_assistant_content %}
+{% block content %}
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -14,7 +14,7 @@
             <div class="card-body">
                 <form method="post" id="patientRegistrationForm" onsubmit="return false;">
                     {% csrf_token %}
-                    
+
                     <!-- Patient Information -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -22,56 +22,56 @@
                                 <i class="fas fa-user me-2"></i>Patient Information
                             </h6>
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.first_name.id_for_label }}" class="form-label">
                                 First Name <span class="text-danger">*</span>
                             </label>
                             {{ form.first_name }}
                             {% if form.first_name.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.first_name.errors.0 }}
-                                </div>
+                            <div class="text-danger small mt-1">
+                                {{ form.first_name.errors.0 }}
+                            </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.last_name.id_for_label }}" class="form-label">
                                 Last Name <span class="text-danger">*</span>
                             </label>
                             {{ form.last_name }}
                             {% if form.last_name.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.last_name.errors.0 }}
-                                </div>
+                            <div class="text-danger small mt-1">
+                                {{ form.last_name.errors.0 }}
+                            </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">
                                 Date of Birth <span class="text-danger">*</span>
                             </label>
                             {{ form.date_of_birth }}
                             {% if form.date_of_birth.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.date_of_birth.errors.0 }}
-                                </div>
+                            <div class="text-danger small mt-1">
+                                {{ form.date_of_birth.errors.0 }}
+                            </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.gender.id_for_label }}" class="form-label">
                                 Gender <span class="text-danger">*</span>
                             </label>
                             {{ form.gender }}
                             {% if form.gender.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.gender.errors.0 }}
-                                </div>
+                            <div class="text-danger small mt-1">
+                                {{ form.gender.errors.0 }}
+                            </div>
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Contact Information -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -79,7 +79,7 @@
                                 <i class="fas fa-phone me-2"></i>Contact Information
                             </h6>
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.phone_number.id_for_label }}" class="form-label">
                                 Phone Number
@@ -87,7 +87,7 @@
                             {{ form.phone_number }}
                             <small class="text-muted">Optional: Contact number</small>
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.email.id_for_label }}" class="form-label">
                                 Email Address
@@ -96,7 +96,7 @@
                             <small class="text-muted">Optional: Email address</small>
                         </div>
                     </div>
-                    
+
                     <!-- Address Information -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -104,7 +104,7 @@
                                 <i class="fas fa-map-marker-alt me-2"></i>Address Information
                             </h6>
                         </div>
-                        
+
                         <div class="col-12 mb-3">
                             <label for="{{ form.address.id_for_label }}" class="form-label">
                                 Street Address
@@ -112,21 +112,21 @@
                             {{ form.address }}
                             <small class="text-muted">Optional: Full street address</small>
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.city.id_for_label }}" class="form-label">
                                 City
                             </label>
                             {{ form.city }}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.state.id_for_label }}" class="form-label">
                                 State/Province
                             </label>
                             {{ form.state }}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.postal_code.id_for_label }}" class="form-label">
                                 Postal Code
@@ -134,7 +134,7 @@
                             {{ form.postal_code }}
                         </div>
                     </div>
-                    
+
                     <!-- Consent Section -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -143,19 +143,21 @@
                                     <i class="fas fa-info-circle me-2"></i>Patient Consent
                                 </h6>
                                 <p class="mb-2">
-                                    By registering this patient, you confirm that you have obtained proper consent 
-                                    for medical screening and data collection in accordance with medical privacy regulations.
+                                    By registering this patient, you confirm that you have obtained proper consent
+                                    for medical screening and data collection in accordance with medical privacy
+                                    regulations.
                                 </p>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="consentCheckbox" required>
                                     <label class="form-check-label" for="consentCheckbox">
-                                        I confirm that patient consent has been obtained for screening and data collection
+                                        I confirm that patient consent has been obtained for screening and data
+                                        collection
                                     </label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Form Actions -->
                     <div class="row">
                         <div class="col-12">
@@ -207,109 +209,109 @@
 
 {% block extra_js %}
 <script>
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Patient registration page loaded');
-    
-    const form = document.getElementById('patientRegistrationForm');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (!form || !submitBtn) {
-        console.error('Form or submit button not found!');
-        return;
-    }
-    
-    console.log('Form and button found, adding click handler');
-    
-    // Handle button click instead of form submission
-    submitBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Submit button clicked!');
-        
-        // Validate consent checkbox
-        const consentCheckbox = document.getElementById('consentCheckbox');
-        if (!consentCheckbox || !consentCheckbox.checked) {
-            alert('Please confirm that patient consent has been obtained.');
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Patient registration page loaded');
+
+        const form = document.getElementById('patientRegistrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (!form || !submitBtn) {
+            console.error('Form or submit button not found!');
             return;
         }
-        
-        // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
-        
-        // Submit form via AJAX
-        const formData = new FormData(form);
-        
-        fetch('{% url "health_assistant:patient_register" %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest'
+
+        console.log('Form and button found, adding click handler');
+
+        // Handle button click instead of form submission
+        submitBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            console.log('Submit button clicked!');
+
+            // Validate consent checkbox
+            const consentCheckbox = document.getElementById('consentCheckbox');
+            if (!consentCheckbox || !consentCheckbox.checked) {
+                alert('Please confirm that patient consent has been obtained.');
+                return;
             }
-        })
-        .then(response => {
-            console.log('Registration response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Registration response data:', data);
-            if (data.success) {
-                console.log('Registration successful!');
-                console.log('Patient ID from response:', data.patient.patient_id);
-                
-                // Show simple alert instead of modal for now
-                alert(`Patient Registered Successfully!\n\nPatient ID: ${data.patient.patient_id}\nName: ${data.patient.first_name} ${data.patient.last_name}\nAge: ${calculateAge(data.patient.date_of_birth)}\nGender: ${data.patient.gender}\n\nClick OK to continue to screening.`);
-                
-                // Redirect to screening after alert
-                window.location.href = `/health-assistant/screening/${data.patient.id}/`;
-                
-            } else {
-                console.log('Registration failed:', data.message);
-                showAlert(data.message || 'Registration failed. Please try again.', 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('An error occurred during registration. Please try again.', 'danger');
-        })
-        .finally(() => {
-            // Reset button state
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Register Patient';
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+
+            // Submit form via AJAX
+            const formData = new FormData(form);
+
+            fetch('{% url "health_assistant:patient_register" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    console.log('Registration response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Registration response data:', data);
+                    if (data.success) {
+                        console.log('Registration successful!');
+                        console.log('Patient ID from response:', data.patient.patient_id);
+
+                        // Show simple alert instead of modal for now
+                        alert(`Patient Registered Successfully!\n\nPatient ID: ${data.patient.patient_id}\nName: ${data.patient.first_name} ${data.patient.last_name}\nAge: ${calculateAge(data.patient.date_of_birth)}\nGender: ${data.patient.gender}\n\nClick OK to continue to screening.`);
+
+                        // Redirect to screening after alert
+                        window.location.href = `/health-assistant/screening/${data.patient.id}/`;
+
+                    } else {
+                        console.log('Registration failed:', data.message);
+                        showAlert(data.message || 'Registration failed. Please try again.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred during registration. Please try again.', 'danger');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Register Patient';
+                });
         });
-    });
-    
-    // Helper function to calculate age from date of birth
-    function calculateAge(dateString) {
-        const dob = new Date(dateString);
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-            age--;
+
+        // Helper function to calculate age from date of birth
+        function calculateAge(dateString) {
+            const dob = new Date(dateString);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            return age;
         }
-        
-        return age;
-    }
-});
+    });
 </script>
 {% endblock %}

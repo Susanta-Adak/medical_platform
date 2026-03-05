@@ -11,6 +11,8 @@ def home(request):
             return redirect('dashboard:admin_dashboard')
         elif hasattr(request.user, 'role') and request.user.role == 'HEALTH_ASSISTANT':
             return redirect('health_assistant:home')
+        elif hasattr(request.user, 'role') and request.user.role == 'DOCTOR':
+            return redirect('doctor:home')
         elif request.user.is_staff:
             return redirect('dashboard:admin_dashboard')
         else:
@@ -27,6 +29,8 @@ class MedicalLoginView(LoginView):
                 return redirect('dashboard:admin_dashboard')
             elif hasattr(request.user, 'role') and request.user.role == 'HEALTH_ASSISTANT':
                 return redirect('health_assistant:home')
+            elif hasattr(request.user, 'role') and request.user.role == 'DOCTOR':
+                return redirect('doctor:home')
             elif request.user.is_staff:
                 return redirect('dashboard:admin_dashboard')
             else:
@@ -39,6 +43,8 @@ class MedicalLoginView(LoginView):
             return reverse('dashboard:admin_dashboard')
         elif hasattr(user, 'role') and user.role == 'HEALTH_ASSISTANT':
             return reverse('health_assistant:home')
+        elif hasattr(user, 'role') and user.role == 'DOCTOR':
+            return reverse('doctor:home')
         elif user.is_staff:
             return reverse('dashboard:admin_dashboard')
         else:

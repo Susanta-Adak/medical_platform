@@ -157,7 +157,7 @@ class VitalSigns(models.Model):
     diastolic_bp = models.PositiveSmallIntegerField(_('diastolic BP (mmHg)'), null=True, blank=True)
     heart_rate = models.PositiveSmallIntegerField(_('heart rate (bpm)'), null=True, blank=True)
     respiratory_rate = models.PositiveSmallIntegerField(_('respiratory rate (bpm)'), null=True, blank=True)
-    temperature = models.DecimalField(_('temperature (°C)'), max_digits=3, decimal_places=1, null=True, blank=True)
+    temperature = models.DecimalField(_('temperature (°F)'), max_digits=4, decimal_places=1, null=True, blank=True)
     oxygen_saturation = models.PositiveSmallIntegerField(
         _('oxygen saturation (%)'),
         validators=[MinValueValidator(0), MaxValueValidator(100)],
@@ -287,7 +287,7 @@ class PatientVitals(models.Model):
     blood_pressure_diastolic = models.PositiveIntegerField(_('diastolic BP (mmHg)'), null=True, blank=True)
     
     heart_rate = models.PositiveIntegerField(_('heart rate (bpm)'), null=True, blank=True)
-    temperature = models.DecimalField(_('temperature (°C)'), max_digits=4, decimal_places=1, null=True, blank=True)
+    temperature = models.DecimalField(_('temperature (°F)'), max_digits=4, decimal_places=1, null=True, blank=True)
     spo2 = models.PositiveIntegerField(
         _('SpO2 (%)'), 
         validators=[MinValueValidator(0), MaxValueValidator(100)],

@@ -1,11 +1,24 @@
 from pathlib import Path
 from datetime import timedelta
 import importlib
+import importlib.util
 import os
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = 'change-me'
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me')
+
+# AWS S3 Settings mapped from .env
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '').strip() or None
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '').strip() or None
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', 'medical-data-collection-platform')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'ap-south-1')
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
 
 DEBUG = False
 
@@ -46,13 +59,14 @@ INSTALLED_APPS = [
     'devices.apps.DevicesConfig',
     'dashboard.apps.DashboardConfig',
     'health_assistant.apps.HealthAssistantConfig',
+    'doctor.apps.DoctorConfig',
+    'iot_gateway.apps.IotGatewayConfig',
     'core.apps.CoreConfig',
 ]
 
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -106,12 +120,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('RDS_HOSTNAME'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('RDS_DB_NAME', 'postgres'),
+            'USER': os.environ.get('RDS_USERNAME', 'annjan0077'),
+            'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
+            'HOST': os.environ.get('RDS_HOSTNAME'),
+            'PORT': os.environ.get('RDS_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -121,12 +147,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 if importlib.util.find_spec('rest_framework') is not None:
-    REST_FRAMEWORK = {}
+    if 'REST_FRAMEWORK' not in locals():
+        REST_FRAMEWORK = {}
 
     if importlib.util.find_spec('rest_framework_simplejwt') is not None:
-        REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
+        REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
             'rest_framework_simplejwt.authentication.JWTAuthentication',
-        )
+            'rest_framework.authentication.SessionAuthentication',
+        ]
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
@@ -138,3 +166,6 @@ LOGIN_REDIRECT_URL = 'dashboard:index'  # Default redirect for non-admin users
 LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if AWS_ACCESS_KEY_ID:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

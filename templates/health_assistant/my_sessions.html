@@ -35,19 +35,40 @@
                                         <label for="status" class="form-label">Status</label>
                                         <select name="status" id="status" class="form-select">
                                             <option value="">All Status</option>
-                                            <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
-                                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-                                            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                                            {% if status_filter == 'in_progress' %}
+                                            <option value="in_progress" selected>In Progress</option>
+                                            {% else %}
+                                            <option value="in_progress">In Progress</option>
+                                            {% endif %}
+
+                                            {% if status_filter == 'completed' %}
+                                            <option value="completed" selected>Completed</option>
+                                            {% else %}
+                                            <option value="completed">Completed</option>
+                                            {% endif %}
+
+                                            {% if status_filter == 'cancelled' %}
+                                            <option value="cancelled" selected>Cancelled</option>
+                                            {% else %}
+                                            <option value="cancelled">Cancelled</option>
+                                            {% endif %}
+
+                                            {% if status_filter == 'failed' %}
+                                            <option value="failed" selected>Failed</option>
+                                            {% else %}
+                                            <option value="failed">Failed</option>
+                                            {% endif %}
                                         </select>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="date_from" class="form-label">From Date</label>
-                                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                                        <input type="date" name="date_from" id="date_from" class="form-control"
+                                            value="{{ date_from }}">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="date_to" class="form-label">To Date</label>
-                                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                                        <input type="date" name="date_to" id="date_to" class="form-control"
+                                            value="{{ date_to }}">
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">&nbsp;</label>
@@ -55,7 +76,8 @@
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="fas fa-filter me-1"></i>Filter
                                             </button>
-                                            <a href="{% url 'health_assistant:my_sessions' %}" class="btn btn-outline-secondary">
+                                            <a href="{% url 'health_assistant:my_sessions' %}"
+                                                class="btn btn-outline-secondary">
                                                 <i class="fas fa-times me-1"></i>Clear
                                             </a>
                                         </div>
@@ -65,150 +87,159 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Sessions Table -->
                 {% if sessions %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Patient</th>
-                                    <th>Screening Type</th>
-                                    <th>Device</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Duration</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for session in sessions %}
-                                <tr>
-                                    <td>
-                                        <div class="patient-info">
-                                            <strong>{{ session.patient.name }}</strong>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Screening Type</th>
+                                <th>Device</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <strong>{{ session.patient.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            ID: {{ session.patient.patient_id|default:session.patient.id }} |
+                                            Age: {{ session.patient.age }} |
+                                            {{ session.patient.get_gender_display|default:session.patient.gender }}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ session.screening_type.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ session.screening_type.description|truncatechars:50 }}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i
+                                            class="fas fa-microchip me-2 {% if session.device_used.connection_status == 'connected' %}text-success{% else %}text-danger{% endif %}"></i>
+                                        <div>
+                                            <strong>{{ session.device_used.name|default:"Not selected" }}</strong>
                                             <br>
                                             <small class="text-muted">
-                                                ID: {{ session.patient.external_id|default:session.patient.id }} | 
-                                                Age: {{ session.patient.age }} | 
-                                                {{ session.patient.gender }}
+                                                {{ session.device_used.model_number|default:"" }}
                                             </small>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong>{{ session.product.name }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ session.product.description|truncatechars:50 }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-microchip me-2 {% if session.device.status == 'connected' %}text-success{% else %}text-danger{% endif %}"></i>
-                                            <div>
-                                                <strong>{{ session.device.name }}</strong>
-                                                <br>
-                                                <small class="text-muted">{{ session.device.model }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="status-badge status-{{ session.status|lower }}">
-                                            {{ session.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong>{{ session.created_at|date:"M d, Y" }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ session.created_at|time:"H:i" }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {% if session.completed_at %}
-                                            {% with duration=session.completed_at|timeuntil:session.created_at %}
-                                                <span class="text-muted">{{ duration }}</span>
-                                            {% endwith %}
-                                        {% elif session.status == 'in_progress' %}
-                                            <span class="text-warning">
-                                                <i class="fas fa-clock me-1"></i>In Progress
-                                            </span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="#" class="btn btn-outline-primary" title="View Details" 
-                                               data-session-id="{{ session.id }}" data-action="view">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            {% if session.status == 'in_progress' %}
-                                            <a href="#" class="btn btn-outline-success" title="Continue Session"
-                                               data-session-id="{{ session.id }}" data-action="continue">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                            {% endif %}
-                                            {% if session.status == 'completed' %}
-                                            <a href="#" class="btn btn-outline-info" title="View Results"
-                                               data-session-id="{{ session.id }}" data-action="results">
-                                                <i class="fas fa-chart-line"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Pagination -->
-                    {% if is_paginated %}
-                        <nav aria-label="Sessions pagination">
-                            <ul class="pagination justify-content-center">
-                                {% if page_obj.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
-                                    </li>
-                                {% endif %}
-                                
-                                {% for num in page_obj.paginator.page_range %}
-                                    {% if page_obj.number == num %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ num }}</span>
-                                        </li>
-                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
-                                        </li>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ session.status|lower }}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ session.created_at|date:"M d, Y" }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ session.created_at|time:"H:i" }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if session.actual_end_time %}
+                                    {% with duration=session.actual_end_time|timeuntil:session.created_at %}
+                                    <span class="text-muted">{{ duration }}</span>
+                                    {% endwith %}
+                                    {% elif session.status == 'in_progress' %}
+                                    <span class="text-warning">
+                                        <i class="fas fa-clock me-1"></i>In Progress
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
                                     {% endif %}
-                                {% endfor %}
-                                
-                                {% if page_obj.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    {% endif %}
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
-                        <h5 class="text-muted">No screening sessions found</h5>
-                        <p class="text-muted">
-                            {% if status_filter or date_from or date_to %}
-                                Try adjusting your filters or 
-                                <a href="{% url 'health_assistant:my_sessions' %}">clear all filters</a>.
-                            {% else %}
-                                Start your first screening session to see it here.
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'health_assistant:session_overview' session_id=session.id %}"
+                                            class="btn btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if session.status == 'in_progress' %}
+                                        <a href="#" class="btn btn-outline-success" title="Continue Session"
+                                            data-session-id="{{ session.id }}" data-action="continue">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if session.status == 'completed' %}
+                                        <a href="{% url 'health_assistant:session_overview' session_id=session.id %}"
+                                            class="btn btn-outline-info" title="View Results">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Sessions pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li
+                            class="page-item">
+                            <a class="page-link"
+                                href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{
+                                num }}</a>
+                            </li>
                             {% endif %}
-                        </p>
-                        <a href="{% url 'health_assistant:screening_session' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Start Screening Session
-                        </a>
-                    </div>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+                            </li>
+                            {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No screening sessions found</h5>
+                    <p class="text-muted">
+                        {% if status_filter or date_from or date_to %}
+                        Try adjusting your filters or
+                        <a href="{% url 'health_assistant:my_sessions' %}">clear all filters</a>.
+                        {% else %}
+                        Start your first screening session to see it here.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'health_assistant:screening_session' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Start Screening Session
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -238,33 +269,33 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Handle session action clicks
-    $('[data-action]').click(function(e) {
-        e.preventDefault();
-        const sessionId = $(this).data('session-id');
-        const action = $(this).data('action');
-        
-        switch(action) {
-            case 'view':
-                viewSessionDetails(sessionId);
-                break;
-            case 'continue':
-                continueSession(sessionId);
-                break;
-            case 'results':
-                viewResults(sessionId);
-                break;
-        }
-    });
-});
+    $(document).ready(function () {
+        // Handle session action clicks
+        $('[data-action]').click(function (e) {
+            e.preventDefault();
+            const sessionId = $(this).data('session-id');
+            const action = $(this).data('action');
 
-function viewSessionDetails(sessionId) {
-    makeAjaxRequest(`/health_assistant/api/session-details/${sessionId}/`)
-        .then(data => {
-            if (data.session) {
-                const session = data.session;
-                const content = `
+            switch (action) {
+                case 'view':
+                    viewSessionDetails(sessionId);
+                    break;
+                case 'continue':
+                    continueSession(sessionId);
+                    break;
+                case 'results':
+                    viewResults(sessionId);
+                    break;
+            }
+        });
+    });
+
+    function viewSessionDetails(sessionId) {
+        makeAjaxRequest(`/health-assistant/api/session-details/${sessionId}/`)
+            .then(data => {
+                if (data.session) {
+                    const session = data.session;
+                    const content = `
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Patient Information</h6>
@@ -288,24 +319,24 @@ function viewSessionDetails(sessionId) {
                         </div>
                     </div>
                 `;
-                
-                document.getElementById('sessionDetailsContent').innerHTML = content;
-                new bootstrap.Modal(document.getElementById('sessionDetailsModal')).show();
-            }
-        })
-        .catch(error => {
-            showAlert('Error loading session details', 'danger');
-        });
-}
 
-function continueSession(sessionId) {
-    if (confirm('Are you sure you want to continue this screening session?')) {
-        window.location.href = `/health_assistant/session/${sessionId}/`;
+                    document.getElementById('sessionDetailsContent').innerHTML = content;
+                    new bootstrap.Modal(document.getElementById('sessionDetailsModal')).show();
+                }
+            })
+            .catch(error => {
+                showAlert('Error loading session details', 'danger');
+            });
     }
-}
 
-function viewResults(sessionId) {
-    window.location.href = `/health_assistant/session/${sessionId}/results/`;
-}
+    function continueSession(sessionId) {
+        if (confirm('Are you sure you want to continue this screening session?')) {
+            window.location.href = `/health-assistant/session/${sessionId}/`;
+        }
+    }
+
+    function viewResults(sessionId) {
+        window.location.href = `/health-assistant/session/${sessionId}/results/`;
+    }
 </script>
 {% endblock %}

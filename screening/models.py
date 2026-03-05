@@ -94,6 +94,19 @@ class ScreeningSession(models.Model):
         (RESULT_PENDING, 'Pending Review'),
     ]
     
+    # Upload & Processing status
+    UPLOAD_STATUS_PENDING = 'pending'
+    UPLOAD_STATUS_UPLOADING = 'uploading'
+    UPLOAD_STATUS_PROCESSED = 'processed'
+    UPLOAD_STATUS_FAILED = 'failed'
+    
+    UPLOAD_STATUS_CHOICES = [
+        (UPLOAD_STATUS_PENDING, 'Pending Upload'),
+        (UPLOAD_STATUS_UPLOADING, 'Uploading / Processing'),
+        (UPLOAD_STATUS_PROCESSED, 'Processed Successfully'),
+        (UPLOAD_STATUS_FAILED, 'Processing Failed'),
+    ]
+    
     # Basic information
     patient = models.ForeignKey(
         'patients.Patient',
@@ -123,6 +136,13 @@ class ScreeningSession(models.Model):
         max_length=20,
         choices=RESULT_CHOICES,
         default=RESULT_PENDING
+    )
+    
+    upload_status = models.CharField(
+        max_length=20,
+        choices=UPLOAD_STATUS_CHOICES,
+        default=UPLOAD_STATUS_PENDING,
+        help_text="Tracks the status of ZIP payload upload and extraction."
     )
     
     # Staff involved

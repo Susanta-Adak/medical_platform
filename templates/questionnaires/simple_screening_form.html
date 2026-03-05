@@ -5,270 +5,271 @@
 
 {% block extra_css %}
 <style>
-.simple-screening-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.screening-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.screening-header h1 {
-    color: #1f2937;
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
-
-.screening-header p {
-    color: #6b7280;
-    font-size: 1rem;
-}
-
-.questionnaire-type-selector {
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border: 1px solid #e5e7eb;
-}
-
-.type-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.type-option {
-    border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.type-option:hover {
-    border-color: #14b8a6;
-    transform: translateY(-2px);
-}
-
-.type-option.selected {
-    border-color: #14b8a6;
-    background: #f0fdfa;
-}
-
-.type-option i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.type-option h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.25rem;
-}
-
-.type-option p {
-    font-size: 0.875rem;
-    color: #6b7280;
-}
-
-.questions-container {
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border: 1px solid #e5e7eb;
-}
-
-.question-item {
-    margin-bottom: 2rem;
-}
-
-.question-text {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 1rem;
-}
-
-.question-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 0.75rem;
-}
-
-.option-label {
-    border: 2px solid #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: block;
-}
-
-.option-label:hover {
-    border-color: #14b8a6;
-    background: #f0fdfa;
-}
-
-.option-label.selected {
-    border-color: #14b8a6;
-    background: #f0fdfa;
-}
-
-.option-label input[type="radio"],
-.option-label input[type="checkbox"] {
-    display: none;
-}
-
-.option-text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #1f2937;
-}
-
-.option-image {
-    width: 100%;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 0.375rem;
-    margin-bottom: 0.5rem;
-}
-
-.file-upload {
-    border: 2px dashed #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    text-align: center;
-    transition: all 0.2s ease;
-}
-
-.file-upload:hover {
-    border-color: #14b8a6;
-    background: #f0fdfa;
-}
-
-.file-upload input[type="file"] {
-    display: none;
-}
-
-.file-upload i {
-    font-size: 2rem;
-    color: #6b7280;
-    margin-bottom: 0.5rem;
-}
-
-.file-upload p {
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #14b8a6, #0d9488);
-    color: white;
-    padding: 0.875rem 2rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px rgba(20, 184, 166, 0.2);
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(20, 184, 166, 0.3);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-secondary {
-    background: #f3f4f6;
-    color: #6b7280;
-    padding: 0.875rem 2rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-    background: #e5e7eb;
-    color: #4b5563;
-}
-
-.hidden {
-    display: none;
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@media (max-width: 768px) {
     .simple-screening-container {
-        padding: 1rem;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
     }
-    
-    .questionnaire-type-selector,
-    .questions-container {
-        padding: 1.5rem;
+
+    .screening-header {
+        text-align: center;
+        margin-bottom: 2rem;
     }
-    
+
+    .screening-header h1 {
+        color: #1f2937;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .screening-header p {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+
+    .questionnaire-type-selector {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e5e7eb;
+    }
+
     .type-options {
-        grid-template-columns: 1fr;
-    }
-    
-    .question-options {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
+        margin-top: 1.5rem;
     }
-    
-    .btn-primary,
-    .btn-secondary {
+
+    .type-option {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .type-option:hover {
+        border-color: #14b8a6;
+        transform: translateY(-2px);
+    }
+
+    .type-option.selected {
+        border-color: #14b8a6;
+        background: #f0fdfa;
+    }
+
+    .type-option i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .type-option h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .type-option p {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .questions-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .question-item {
+        margin-bottom: 2rem;
+    }
+
+    .question-text {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+
+    .question-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .option-label {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: block;
+    }
+
+    .option-label:hover {
+        border-color: #14b8a6;
+        background: #f0fdfa;
+    }
+
+    .option-label.selected {
+        border-color: #14b8a6;
+        background: #f0fdfa;
+    }
+
+    .option-label input[type="radio"],
+    .option-label input[type="checkbox"] {
+        display: none;
+    }
+
+    .option-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .option-image {
         width: 100%;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
     }
-}
+
+    .file-upload {
+        border: 2px dashed #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload:hover {
+        border-color: #14b8a6;
+        background: #f0fdfa;
+    }
+
+    .file-upload input[type="file"] {
+        display: none;
+    }
+
+    .file-upload i {
+        font-size: 2rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload p {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        color: white;
+        padding: 0.875rem 2rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px rgba(20, 184, 166, 0.2);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(20, 184, 166, 0.3);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #6b7280;
+        padding: 0.875rem 2rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .simple-screening-container {
+            padding: 1rem;
+        }
+
+        .questionnaire-type-selector,
+        .questions-container {
+            padding: 1.5rem;
+        }
+
+        .type-options {
+            grid-template-columns: 1fr;
+        }
+
+        .question-options {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -308,66 +309,81 @@
             {% csrf_token %}
             <input type="hidden" name="questionnaire_id" value="{{ questionnaire.id }}">
             {% if request.GET.patient_id %}
-                <input type="hidden" name="patient_id" value="{{ request.GET.patient_id }}">
+            <input type="hidden" name="patient_id" value="{{ request.GET.patient_id }}">
             {% endif %}
-            
+
             <div id="questionsList">
                 {% for question in questions %}
-                    <div class="question-item" data-question-id="{{ question.id }}">
-                        <div class="question-text">
-                            <span class="question-number">{{ forloop.counter }}.</span>
-                            {{ question.question_text }}
-                            {% if question.is_required %}<span class="required">*</span>{% endif %}
-                        </div>
-                        
-                        <div class="question-options">
-                            {% if question.question_type == 'yes_no' %}
-                                <div class="option-group">
-                                    <label class="option-label">
-                                        <input type="radio" name="question_{{ question.id }}" value="yes" {% if question.is_required %}required{% endif %}>
-                                        <span class="option-text">Yes</span>
-                                    </label>
-                                    <label class="option-label">
-                                        <input type="radio" name="question_{{ question.id }}" value="no" {% if question.is_required %}required{% endif %}>
-                                        <span class="option-text">No</span>
-                                    </label>
-                                </div>
-                            
-                            {% elif question.question_type == 'multiple_choice' %}
-                                <div class="option-group">
-                                    {% for option in question.options.all %}
-                                        <label class="option-label">
-                                            <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" {% if question.is_required %}required{% endif %}>
-                                            <span class="option-text">{{ option.text }}</span>
-                                        </label>
-                                    {% endfor %}
-                                </div>
-                            
-                            {% elif question.question_type == 'attachment' %}
-                                <div class="file-upload-container">
-                                    <input type="file" name="attachment_{{ question.id }}" id="attachment_{{ question.id }}" class="file-input" accept=".pdf,.xls,.xlsx,.csv,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp">
-                                    <label for="attachment_{{ question.id }}" class="file-label">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <span>Choose file or drag and drop</span>
-                                        <small>PDF, XLS, CSV, TXT, DOC, Images (max 10MB)</small>
-                                    </label>
-                                    <div class="file-preview" id="preview_{{ question.id }}"></div>
-                                </div>
-                            
-                            {% else %}
-                                <div class="text-input-container">
-                                    <input type="text" name="question_{{ question.id }}" class="form-control" placeholder="Enter your answer" {% if question.is_required %}required{% endif %}>
-                                </div>
-                            {% endif %}
-                        </div>
+                <div class="question-item" data-question-id="{{ question.id }}">
+                    <div class="question-text">
+                        <span class="question-number">{{ forloop.counter }}.</span>
+                        {{ question.question_text }}
+                        {% if question.is_required %}<span class="required">*</span>{% endif %}
                     </div>
+
+                    <div class="question-options">
+                        {% if question.question_type == 'yes_no' %}
+                        <div class="option-group">
+                            <label class="option-label">
+                                <input type="radio" name="question_{{ question.id }}" value="yes" {% if
+                                    question.is_required %}required{% endif %}>
+                                <span class="option-text">Yes</span>
+                            </label>
+                            <label class="option-label">
+                                <input type="radio" name="question_{{ question.id }}" value="no" {% if
+                                    question.is_required %}required{% endif %}>
+                                <span class="option-text">No</span>
+                            </label>
+                        </div>
+
+                        {% elif question.question_type == 'multiple_choice' %}
+                        <div class="option-group">
+                            {% for option in question.options.all %}
+                            <label class="option-label">
+                                <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" {% if
+                                    question.is_required %}required{% endif %}>
+                                {% if option.option_image %}
+                                <img src="{{ option.option_image.url }}" alt="{{ option.text|default:option.id }}"
+                                    class="option-image"
+                                    style="max-height: 100px; display: block; margin: 0 auto 0.5rem;">
+                                {% if option.text %}
+                                <span class="option-text">{{ option.text }}</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="option-text">{{ option.text }}</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+
+                        {% elif question.question_type == 'attachment' %}
+                        <div class="file-upload-container">
+                            <input type="file" name="attachment_{{ question.id }}" id="attachment_{{ question.id }}"
+                                class="file-input"
+                                accept=".pdf,.xls,.xlsx,.csv,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp">
+                            <label for="attachment_{{ question.id }}" class="file-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Choose file or drag and drop</span>
+                                <small>PDF, XLS, CSV, TXT, DOC, Images (max 10MB)</small>
+                            </label>
+                            <div class="file-preview" id="preview_{{ question.id }}"></div>
+                        </div>
+
+                        {% else %}
+                        <div class="text-input-container">
+                            <input type="text" name="question_{{ question.id }}" class="form-control"
+                                placeholder="Enter your answer" {% if question.is_required %}required{% endif %}>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
                 {% empty %}
-                    <div class="no-questions">
-                        <p>No questions found for this questionnaire.</p>
-                    </div>
+                <div class="no-questions">
+                    <p>No questions found for this questionnaire.</p>
+                </div>
                 {% endfor %}
             </div>
-            
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                     <i class="fas fa-check-circle"></i> Submit Questionnaire
@@ -378,59 +394,59 @@
 </div>
 
 <script>
-// File upload handling
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle file uploads
-    const fileInputs = document.querySelectorAll('.file-input');
-    
-    fileInputs.forEach(input => {
-        input.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('preview_' + this.id.replace('attachment_', ''));
-            
-            if (file) {
-                preview.innerHTML = `
+    // File upload handling
+    document.addEventListener('DOMContentLoaded', function () {
+        // Handle file uploads
+        const fileInputs = document.querySelectorAll('.file-input');
+
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('preview_' + this.id.replace('attachment_', ''));
+
+                if (file) {
+                    preview.innerHTML = `
                     <div class="file-info">
                         <i class="fas fa-file"></i>
                         <span>${file.name}</span>
                         <small>(${(file.size / 1024 / 1024).toFixed(2)} MB)</small>
                     </div>
                 `;
-            } else {
-                preview.innerHTML = '';
-            }
+                } else {
+                    preview.innerHTML = '';
+                }
+            });
+        });
+
+        // Form submission
+        const form = document.getElementById('screeningForm');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Questionnaire submitted successfully!');
+                        window.location.href = '/health-assistant/patients/';
+                    } else {
+                        alert('Error: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting questionnaire');
+                });
         });
     });
-    
-    // Form submission
-    const form = document.getElementById('screeningForm');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Questionnaire submitted successfully!');
-                window.location.href = '/health-assistant/patients/';
-            } else {
-                alert('Error: ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error submitting questionnaire');
-        });
-    });
-});
 </script>
 {% endblock %}

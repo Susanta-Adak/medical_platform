@@ -74,61 +74,61 @@
         </div>
         <div class="card-body">
           {% if medical_record %}
-            <div class="row">
-              <div class="col-sm-4">
-                <strong>Blood Type:</strong>
-              </div>
-              <div class="col-sm-8">
-                {{ medical_record.blood_type|default:"N/A" }}
-              </div>
+          <div class="row">
+            <div class="col-sm-4">
+              <strong>Blood Type:</strong>
             </div>
-            <hr>
-            <div class="row">
-              <div class="col-sm-4">
-                <strong>Height:</strong>
-              </div>
-              <div class="col-sm-8">
-                {{ medical_record.height|default:"N/A" }} cm
-              </div>
+            <div class="col-sm-8">
+              {{ medical_record.blood_type|default:"N/A" }}
             </div>
-            <hr>
-            <div class="row">
-              <div class="col-sm-4">
-                <strong>Weight:</strong>
-              </div>
-              <div class="col-sm-8">
-                {{ medical_record.weight|default:"N/A" }} kg
-              </div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4">
+              <strong>Height:</strong>
             </div>
-            {% if medical_record.allergies %}
-            <hr>
-            <div class="row">
-              <div class="col-sm-4">
-                <strong>Allergies:</strong>
-              </div>
-              <div class="col-sm-8">
-                {{ medical_record.allergies }}
-              </div>
+            <div class="col-sm-8">
+              {{ medical_record.height|default:"N/A" }} cm
             </div>
-            {% endif %}
-            {% if medical_record.chronic_conditions %}
-            <hr>
-            <div class="row">
-              <div class="col-sm-4">
-                <strong>Chronic Conditions:</strong>
-              </div>
-              <div class="col-sm-8">
-                {{ medical_record.chronic_conditions }}
-              </div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4">
+              <strong>Weight:</strong>
             </div>
-            {% endif %}
+            <div class="col-sm-8">
+              {{ medical_record.weight|default:"N/A" }} kg
+            </div>
+          </div>
+          {% if medical_record.allergies %}
+          <hr>
+          <div class="row">
+            <div class="col-sm-4">
+              <strong>Allergies:</strong>
+            </div>
+            <div class="col-sm-8">
+              {{ medical_record.allergies }}
+            </div>
+          </div>
+          {% endif %}
+          {% if medical_record.chronic_conditions %}
+          <hr>
+          <div class="row">
+            <div class="col-sm-4">
+              <strong>Chronic Conditions:</strong>
+            </div>
+            <div class="col-sm-8">
+              {{ medical_record.chronic_conditions }}
+            </div>
+          </div>
+          {% endif %}
           {% else %}
-            <p class="text-muted">No medical record found.</p>
+          <p class="text-muted">No medical record found.</p>
           {% endif %}
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-6">
       <div class="card">
         <div class="card-header bg-info text-white">
@@ -188,34 +188,34 @@
         </div>
         <div class="card-body">
           {% if vital_signs %}
-            {% for vital in vital_signs %}
-              <div class="border-bottom pb-2 mb-2">
-                <small class="text-muted">{{ vital.recorded_at|date:"M d, Y H:i" }}</small>
-                <div class="row">
-                  <div class="col-6">
-                    <strong>BP:</strong> {{ vital.systolic_bp }}/{{ vital.diastolic_bp }}
-                  </div>
-                  <div class="col-6">
-                    <strong>HR:</strong> {{ vital.heart_rate }}
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-6">
-                    <strong>Temp:</strong> {{ vital.temperature }}°C
-                  </div>
-                  <div class="col-6">
-                    <strong>SpO2:</strong> {{ vital.oxygen_saturation }}%
-                  </div>
-                </div>
+          {% for vital in vital_signs %}
+          <div class="border-bottom pb-2 mb-2">
+            <small class="text-muted">{{ vital.recorded_at|date:"M d, Y H:i" }}</small>
+            <div class="row">
+              <div class="col-6">
+                <strong>BP:</strong> {{ vital.systolic_bp }}/{{ vital.diastolic_bp }}
               </div>
-            {% endfor %}
+              <div class="col-6">
+                <strong>HR:</strong> {{ vital.heart_rate }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6">
+                <strong>Temp:</strong> {{ vital.temperature }}°F
+              </div>
+              <div class="col-6">
+                <strong>SpO2:</strong> {{ vital.oxygen_saturation }}%
+              </div>
+            </div>
+          </div>
+          {% endfor %}
           {% else %}
-            <p class="text-muted">No vital signs recorded.</p>
+          <p class="text-muted">No vital signs recorded.</p>
           {% endif %}
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-4">
       <div class="card">
         <div class="card-header bg-warning text-white">
@@ -225,20 +225,20 @@
         </div>
         <div class="card-body">
           {% if notes %}
-            {% for note in notes %}
-              <div class="border-bottom pb-2 mb-2">
-                <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
-                <div class="fw-bold">{{ note.title }}</div>
-                <div class="small">{{ note.content|truncatewords:20 }}</div>
-              </div>
-            {% endfor %}
+          {% for note in notes %}
+          <div class="border-bottom pb-2 mb-2">
+            <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+            <div class="fw-bold">{{ note.title }}</div>
+            <div class="small">{{ note.content|truncatewords:20 }}</div>
+          </div>
+          {% endfor %}
           {% else %}
-            <p class="text-muted">No notes recorded.</p>
+          <p class="text-muted">No notes recorded.</p>
           {% endif %}
         </div>
       </div>
     </div>
-    
+
     <div class="col-md-4">
       <div class="card">
         <div class="card-header bg-secondary text-white">
@@ -248,15 +248,15 @@
         </div>
         <div class="card-body">
           {% if documents %}
-            {% for document in documents %}
-              <div class="border-bottom pb-2 mb-2">
-                <small class="text-muted">{{ document.uploaded_at|date:"M d, Y" }}</small>
-                <div class="fw-bold">{{ document.title }}</div>
-                <div class="small">{{ document.document_type }}</div>
-              </div>
-            {% endfor %}
+          {% for document in documents %}
+          <div class="border-bottom pb-2 mb-2">
+            <small class="text-muted">{{ document.uploaded_at|date:"M d, Y" }}</small>
+            <div class="fw-bold">{{ document.title }}</div>
+            <div class="small">{{ document.document_type }}</div>
+          </div>
+          {% endfor %}
           {% else %}
-            <p class="text-muted">No documents uploaded.</p>
+          <p class="text-muted">No documents uploaded.</p>
           {% endif %}
         </div>
       </div>

@@ -38,6 +38,7 @@ urlpatterns = [
     # Response URLs
     path('responses/', views.ResponseListView.as_view(), name='response_list'),
     path('responses/<int:pk>/', views.ResponseDetailView.as_view(), name='response_detail'),
+    path('responses/<int:pk>/edit/', views.response_edit, name='response_edit'),
     path('responses/<int:pk>/delete/', views.ResponseDeleteView.as_view(), name='response_delete'),
     path('download-responses/', views.download_responses, name='download_responses'),
     

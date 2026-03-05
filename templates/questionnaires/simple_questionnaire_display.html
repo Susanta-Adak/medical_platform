@@ -82,9 +82,10 @@
                             <label class="form-check-label radio-label fs-5 d-flex align-items-center"
                                 for="opt_{{ option.id }}">
                                 {% if option.option_image %}
-                                <div class="me-3">
+                                <div class="me-3 mb-2">
                                     <img src="{{ option.option_image.url }}" alt="{{ option.text|default:option.id }}"
-                                        class="img-thumbnail" style="max-height: 100px;">
+                                        class="img-thumbnail"
+                                        style="max-height: 400px; max-width: 500px; width: 100%; object-fit: contain;">
                                     {% if option.text %}
                                     <span class="d-block mt-1 text-muted small">{{ option.text }}</span>
                                     {% endif %}

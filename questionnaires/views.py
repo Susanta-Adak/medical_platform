@@ -174,7 +174,14 @@ class ResponseListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     paginate_by = 20
     
     def test_func(self):
-        return self.request.user.is_staff
+        from accounts.models import User
+        return self.request.user.is_staff or self.request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR]
+    
+    def get_template_names(self):
+        from accounts.models import User
+        if self.request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR]:
+            return ['health_assistant/response_list.html']
+        return [self.template_name]
     
     def get_queryset(self):
         queryset = Response.objects.select_related('questionnaire', 'respondent', 'patient')
@@ -227,7 +234,16 @@ class ResponseDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     context_object_name = 'response'
     
     def test_func(self):
-        return self.request.user.is_staff or self.request.user == self.get_object().respondent
+        from accounts.models import User
+        if self.request.user.is_staff or self.request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR]:
+            return True
+        return self.request.user == self.get_object().respondent
+    
+    def get_template_names(self):
+        from accounts.models import User
+        if self.request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR]:
+            return ['health_assistant/response_detail.html']
+        return [self.template_name]
     
     def get_queryset(self):
         return Response.objects.select_related('questionnaire', 'respondent', 'patient')
@@ -250,7 +266,9 @@ class ResponseDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'questionnaires/response_confirm_delete.html'
     
     def test_func(self):
-        return self.request.user.is_staff or self.request.user == self.get_object().respondent
+        # Only staff or the respondent can delete (if respondent is not just a health assistant reviewing, but actual admin)
+        # Actually requirement says "not delete" for health assistant, so keep just staff or original respondent
+        return self.request.user.is_staff
     
     def get_success_url(self):
         return reverse_lazy('questionnaires:response_list')
@@ -258,6 +276,59 @@ class ResponseDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Response deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+@login_required
+def response_edit(request, pk):
+    response_obj = get_object_or_404(Response, pk=pk)
+    
+    from accounts.models import User
+    if not (request.user.is_staff or request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR] or request.user == response_obj.respondent):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+    
+    questionnaire = response_obj.questionnaire
+    
+    if request.method == 'POST':
+        form = ResponseForm(questionnaire, request.POST, request.FILES, instance=response_obj)
+        if form.is_valid():
+            response = form.save()
+            # save_answers handles update and create
+            form.save_answers(response)
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Response updated successfully!',
+                    'response_id': response.pk
+                })
+            else:
+                messages.success(request, 'Response updated successfully.')
+                return redirect('questionnaires:response_detail', pk=response.pk)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Please correct the errors below.',
+                    'errors': form.errors
+                })
+    else:
+        form = ResponseForm(questionnaire, instance=response_obj)
+    
+    # Use appropriate template based on questionnaire type
+    if questionnaire.title.lower() == 'patient registration' or 'patient' in questionnaire.title.lower():
+        template = 'questionnaires/patient_profile_form.html'
+    elif questionnaire.title.lower() == 'medical screening questionnaire' or 'medical screening' in questionnaire.title.lower():
+        template = 'questionnaires/simple_screening_form.html'
+    else:
+        template = 'questionnaires/simple_questionnaire_display.html'
+    
+    return render(request, template, {
+        'questionnaire': questionnaire,
+        'questions': questionnaire.questions.all().order_by('order'),
+        'form': form,
+        'is_edit': True,
+        'response_obj': response_obj
+    })
 
 # API Views
 @login_required
@@ -585,7 +656,17 @@ def download_responses(request):
                         file_url = request.build_absolute_uri(answer.file_answer.url)
                         row.append(f'=HYPERLINK("{file_url}", "{answer.file_answer.name}")')
                     elif answer.option_answer.exists():
-                        options = ', '.join([opt.text for opt in answer.option_answer.all()])
+                        options_text = []
+                        for opt in answer.option_answer.all():
+                            opt_text = opt.text or ''
+                            if getattr(opt, 'option_image', None) and not opt_text:
+                                opt_text = '[Image option]'
+                            if getattr(opt, 'option_image', None) and opt.option_image:
+                                file_url = request.build_absolute_uri(opt.option_image.url) if hasattr(request, 'build_absolute_uri') else opt.option_image.url
+                                opt_text += f" (Image URL: {file_url})"
+                            options_text.append(opt_text.strip())
+                        
+                        options = ', '.join(options_text)
                         row.append(options)
                     else:
                         row.append(answer.text_answer or '')

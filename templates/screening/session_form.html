@@ -87,8 +87,7 @@
             <!-- Additional Information -->
             <div class="form-group">
                 <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
-                {{ form.notes|add_class:"form-textarea"|attr:"rows=4"|attr:"placeholder=Enter any additional notes about
-                this screening session" }}
+                {{ form.notes|add_class:"form-textarea"|attr:"rows=4"|attr:"placeholder=Enter any additional notes about this screening session" }}
                 {% for error in form.notes.errors %}
                 <p class="text-red-400 text-sm mt-1">{{ error }}</p>
                 {% endfor %}

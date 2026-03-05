@@ -45,10 +45,8 @@
                         <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{ q.version }}</td>
                         <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{ q.get_status_display }}
                         </td>
-                        <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{
-                            q.get_questionnaire_type_display }}</td>
-                        <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{ q.updated_at|date:"M d,
-                            Y" }}</td>
+                        <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{ q.get_questionnaire_type_display }}</td>
+                        <td class="px-5 py-5 border-b border-gray-600 text-sm text-gray-100">{{ q.updated_at|date:"M d, Y" }}</td>
                         <td class="px-5 py-5 border-b border-gray-600 text-sm text-right whitespace-nowrap">
                             <a href="{% url 'questionnaires:detail' q.pk %}"
                                 class="text-teal-500 hover:text-teal-400 mr-3" title="{% trans 'View Questions' %}">

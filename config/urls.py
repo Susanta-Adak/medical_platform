@@ -29,6 +29,7 @@ urlpatterns = [
     # =========================
     path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
     path("health-assistant/", include(("health_assistant.urls", "health_assistant"), namespace="health_assistant")),
+    path("doctor/", include(("doctor.urls", "doctor"), namespace="doctor")),
 
     # =========================
     # Patients
@@ -40,7 +41,7 @@ urlpatterns = [
     # =========================
     path("screening/", include(("screening.urls", "screening"), namespace="screening")),
     path("questionnaires/", include(("questionnaires.urls", "questionnaires"), namespace="questionnaires")),
-
+    path("iot/", include(("iot_gateway.urls", "iot_gateway"), namespace="iot_gateway")),
 ]
 
 # =========================
