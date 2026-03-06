@@ -162,54 +162,103 @@ def edit_questionnaire_builder(request, pk):
             questionnaire.description = data.get('description', '')
             questionnaire.save()
             
-            # Delete existing questions and options
-            Question.objects.filter(questionnaire=questionnaire).delete()
+            # Get frontend IDs to retain
+            frontend_question_ids = []
+            for question_data in data['questions']:
+                if question_data.get('id'):
+                    try:
+                        frontend_question_ids.append(int(question_data.get('id')))
+                    except ValueError:
+                        pass
             
             # Map frontend IDs to database Question objects to link parents
             question_map = {}
+            processed_question_ids = []
             
-            # Create new questions
+            # Create or update new questions
             for question_data in data['questions']:
-                question = Question.objects.create(
-                    questionnaire=questionnaire,
-                    question_text=question_data['question_text'],
-                    question_type=question_data['type'],
-                    is_required=question_data['required'],
-                    order=question_data['order']
-                )
-                
                 frontend_id = question_data.get('id')
+                
+                question = None
+                try:
+                    db_id = int(frontend_id)
+                    question = Question.objects.get(id=db_id, questionnaire=questionnaire)
+                    question.question_text = question_data['question_text']
+                    question.question_type = question_data['type']
+                    question.is_required = question_data['required']
+                    question.order = question_data['order']
+                    question.save()
+                except (ValueError, TypeError, Question.DoesNotExist):
+                    question = Question.objects.create(
+                        questionnaire=questionnaire,
+                        question_text=question_data['question_text'],
+                        question_type=question_data['type'],
+                        is_required=question_data['required'],
+                        order=question_data['order']
+                    )
+                
+                processed_question_ids.append(question.id)
                 if frontend_id is not None:
                     question_map[str(frontend_id)] = question
                     
-            # Second pass to set parent relationships
+            # Delete questions that were removed by the builder (this handles cascades to answers safely)
+            Question.objects.filter(questionnaire=questionnaire).exclude(id__in=processed_question_ids).delete()
+                    
+            # Second pass to set parent relationships and options
             for question_data in data['questions']:
                 frontend_id = question_data.get('id')
                 parent_id = question_data.get('parent_id')
                 trigger_answer = question_data.get('trigger_answer')
                 
-                if frontend_id is not None and parent_id is not None and str(parent_id) in question_map:
+                if frontend_id is not None and str(frontend_id) in question_map:
                     question = question_map[str(frontend_id)]
-                    question.parent = question_map[str(parent_id)]
-                    question.trigger_answer = trigger_answer
+                    
+                    if parent_id is not None and str(parent_id) in question_map:
+                        question.parent = question_map[str(parent_id)]
+                        question.trigger_answer = trigger_answer
+                    else:
+                        question.parent = None
+                        question.trigger_answer = None
                     question.save()
                 
-                # Create options for multiple choice questions
-                if question_data['type'] == 'multiple_choice':
-                    question = question_map.get(str(frontend_id)) if frontend_id is not None else Question.objects.filter(questionnaire=questionnaire, order=question_data['order']).last()
-                    if question:
+                    # Create or update options for multiple choice questions
+                    if question_data['type'] == 'multiple_choice':
+                        frontend_opt_ids = []
+                        for opt_data in question_data['options']:
+                            db_id = opt_data.get('db_id')
+                            if db_id:
+                                try:
+                                    frontend_opt_ids.append(int(db_id))
+                                except ValueError:
+                                    pass
+                                    
+                        processed_opt_ids = []
                         for option_data in question_data['options']:
-                            opt_obj = QuestionOption.objects.create(
-                                question=question,
-                                text=option_data.get('text', ''),
-                                order=option_data['order']
-                            )
+                            db_id = option_data.get('db_id')
+                            opt_obj = None
+                            try:
+                                opt_db_id = int(db_id)
+                                opt_obj = QuestionOption.objects.get(id=opt_db_id, question=question)
+                                opt_obj.text = option_data.get('text', '')
+                                opt_obj.order = option_data['order']
+                                opt_obj.save()
+                            except (ValueError, TypeError, QuestionOption.DoesNotExist):
+                                opt_obj = QuestionOption.objects.create(
+                                    question=question,
+                                    text=option_data.get('text', ''),
+                                    order=option_data['order']
+                                )
+                            
+                            processed_opt_ids.append(opt_obj.id)
                             
                             # Handle image if uploaded
                             image_key = option_data.get('image_key')
                             if image_key and image_key in request.FILES:
                                 opt_obj.option_image = request.FILES[image_key]
                                 opt_obj.save()
+                                
+                        # Delete removed options
+                        QuestionOption.objects.filter(question=question).exclude(id__in=processed_opt_ids).delete()
             
             return JsonResponse({
                 'success': True,
