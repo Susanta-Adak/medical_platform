@@ -253,16 +253,18 @@
                 // Recurse into followups
                 const followupsContainer = item.querySelector('.followups-container');
                 if (followupsContainer) {
-                    // Determine suffix based on trigger answer
-                    let nextPrefix = num;
+                    let childCount = 1;
                     Array.from(followupsContainer.children).forEach(followup => {
-                        const trigger = followup.dataset.triggerAnswer;
-                        if (trigger === 'yes') followup.querySelector('.question-number').textContent = num + '.1';
-                        if (trigger === 'no') followup.querySelector('.question-number').textContent = num + '.2';
+                        if (!followup.classList.contains('question-item')) return;
+
+                        const newNum = num + '.' + childCount;
+                        followup.querySelector('.question-number').textContent = newNum;
 
                         // Recursive call for deeper nesting
                         const nestedFollowups = followup.querySelector('.followups-container');
-                        if (nestedFollowups) buildNumbers(nestedFollowups, followup.querySelector('.question-number').textContent);
+                        if (nestedFollowups) buildNumbers(nestedFollowups, newNum);
+
+                        childCount++;
                     });
                 }
                 if (!prefix) count++;

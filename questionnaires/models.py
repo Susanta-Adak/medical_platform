@@ -120,7 +120,6 @@ class Question(models.Model):
     
     class Meta:
         ordering = ['order', 'id']
-        unique_together = ('parent', 'trigger_answer')
 
     
     def __str__(self):
