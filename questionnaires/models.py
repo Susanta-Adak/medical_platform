@@ -183,8 +183,13 @@ class Question(models.Model):
             
         parent_number = self.parent.get_display_number()
         
-        # Determine current branch suffix. 1 for 'yes', 2 for 'no' as described in requirements
-        suffix = '1' if self.trigger_answer == self.TRIGGER_YES else '2'
+        # Determine sequential branch suffix among siblings
+        siblings = list(self.parent.follow_ups.all().order_by('order', 'id'))
+        try:
+            suffix = str(siblings.index(self) + 1)
+        except ValueError:
+            # Fallback if self is not saved or not in siblings yet
+            suffix = str(len(siblings) + 1)
         
         return f"{parent_number}.{suffix}"
         
