@@ -393,7 +393,59 @@ def response_edit(request, pk):
         'response_obj': response_obj
     })
 
-# API Views
+
+@login_required
+def response_edit_redirect(request, pk):
+    """The standalone edit page is removed — redirect to 404."""
+    from django.http import Http404
+    raise Http404("The edit page no longer exists. Use the inline edit modal on the response detail page.")
+
+
+@login_required
+@require_POST
+def api_update_response(request, pk):
+    """AJAX endpoint — saves edited answers from the response detail modal."""
+    import json
+    response_obj = get_object_or_404(Response, pk=pk)
+
+    if not (request.user.is_staff or request.user.role in ['health_assistant', 'doctor']):
+        return JsonResponse({'success': False, 'message': 'Access denied'}, status=403)
+
+    try:
+        data = json.loads(request.body)
+        answers_data = data.get('answers', {})  # {question_id: value}
+
+        for question_id_str, value in answers_data.items():
+            try:
+                from questionnaires.models import Answer, Question, QuestionOption
+                question = Question.objects.get(pk=int(question_id_str))
+                answer, _ = Answer.objects.get_or_create(response=response_obj, question=question)
+
+                q_type = question.question_type
+                if q_type in ('short_answer', 'long_answer', 'yes_no', 'true_false', 'number'):
+                    answer.text_answer = str(value) if value is not None else ''
+                    answer.option_answer.clear()
+                elif q_type == 'multiple_choice':
+                    answer.text_answer = ''
+                    answer.option_answer.clear()
+                    if value:
+                        # value may be a single id or list
+                        ids = value if isinstance(value, list) else [value]
+                        options = QuestionOption.objects.filter(pk__in=ids)
+                        answer.option_answer.set(options)
+                elif q_type == 'date':
+                    answer.text_answer = str(value) if value else ''
+                answer.save()
+            except (Question.DoesNotExist, ValueError):
+                continue
+
+        return JsonResponse({'success': True, 'message': 'Response updated successfully!'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+
 @login_required
 @require_http_methods(['POST'])
 def update_question_order(request):

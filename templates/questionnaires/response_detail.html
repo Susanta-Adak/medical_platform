@@ -14,6 +14,10 @@
         class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 flex items-center transition">
         <i class="fas fa-arrow-left mr-2"></i> Back to List
       </a>
+      <button onclick="openEditModal()"
+        class="px-4 py-2 rounded-lg text-white bg-teal-600 hover:bg-teal-700 flex items-center transition">
+        <i class="fas fa-edit mr-2"></i> Edit Response
+      </button>
       <a href="{% url 'questionnaires:response_delete' response.pk %}"
         class="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 flex items-center transition">
         <i class="fas fa-trash mr-2"></i> Delete
@@ -423,4 +427,160 @@
     </div>
   </div>
 </div>
+
+<!-- ========== Edit Response Modal ========== -->
+<div id="editResponseModal"
+  style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); overflow-y:auto;">
+  <div
+    style="background:#fff; margin:40px auto; max-width:720px; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;">
+    <!-- Modal Header -->
+    <div
+      style="background:#0f766e; color:#fff; padding:20px 24px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; font-size:1.1rem; font-weight:600;">
+        <i class="fas fa-edit mr-2"></i> Edit Response — {{ response.questionnaire.title }}
+      </h3>
+      <button onclick="closeEditModal()"
+        style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer; line-height:1;">×</button>
+    </div>
+    <!-- Modal Body -->
+    <div style="padding:24px; max-height:65vh; overflow-y:auto;">
+      <div id="editModalAlert" style="display:none; margin-bottom:16px;"></div>
+      <form id="editResponseForm">
+        {% csrf_token %}
+        {% for answer in response.answers.all|dictsort:"question.order" %}
+        <div style="margin-bottom:20px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+          <label style="display:block; font-weight:600; color:#1e293b; margin-bottom:8px;">
+            <span
+              style="background:#0f766e; color:#fff; border-radius:4px; padding:1px 7px; font-size:0.75rem; margin-right:6px;">{{
+              answer.question.get_display_number }}</span>
+            {{ answer.question.question_text }}
+            {% if answer.question.is_required %}<span style="color:#ef4444;"> *</span>{% endif %}
+          </label>
+          <small style="color:#64748b; display:block; margin-bottom:8px;">Type: {{
+            answer.question.get_question_type_display }}</small>
+
+          {% if answer.question.question_type == 'multiple_choice' or answer.question.question_type == 'image_choice' %}
+          {% for option in answer.question.options.all %}
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer;">
+            <input type="radio" name="q_{{ answer.question.id }}" value="{{ option.id }}" {% if option in
+              answer.option_answer.all %}checked{% endif %} style="accent-color:#0f766e;">
+            {% if option.option_image %}
+            <img src="{{ option.option_image.url }}" style="height:40px; border-radius:4px;">
+            {% endif %}
+            {{ option.text }}
+          </label>
+          {% endfor %}
+
+          {% elif answer.question.question_type == 'yes_no' or answer.question.question_type == 'true_false' %}
+          <div style="display:flex; gap:16px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="radio" name="q_{{ answer.question.id }}" value="yes" {% if answer.text_answer=='yes'
+                %}checked{% endif %} style="accent-color:#0f766e;"> Yes
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="radio" name="q_{{ answer.question.id }}" value="no" {% if answer.text_answer=='no'
+                %}checked{% endif %} style="accent-color:#0f766e;"> No
+            </label>
+          </div>
+
+          {% elif answer.question.question_type == 'long_answer' %}
+          <textarea name="q_{{ answer.question.id }}" rows="3"
+            style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem; resize:vertical;">{{ answer.text_answer }}</textarea>
+
+          {% elif answer.question.question_type == 'date' %}
+          <input type="date" name="q_{{ answer.question.id }}" value="{{ answer.text_answer }}"
+            style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;">
+
+          {% elif answer.question.question_type == 'number' %}
+          <input type="number" name="q_{{ answer.question.id }}" value="{{ answer.text_answer }}"
+            style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem; width:200px;">
+
+          {% elif answer.question.question_type == 'attachment' %}
+          <p style="color:#64748b; font-style:italic; font-size:0.85rem;">File answers cannot be edited here.</p>
+          {% if answer.file_answer %}
+          <a href="{{ answer.file_answer.url }}" target="_blank" style="color:#0f766e;">View current file</a>
+          {% endif %}
+
+          {% else %}
+          <input type="text" name="q_{{ answer.question.id }}" value="{{ answer.text_answer }}"
+            style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;">
+          {% endif %}
+        </div>
+        {% empty %}
+        <p style="color:#64748b; text-align:center;">No answers to edit.</p>
+        {% endfor %}
+      </form>
+    </div>
+    <!-- Modal Footer -->
+    <div
+      style="padding:16px 24px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:12px; background:#f8fafc;">
+      <button onclick="closeEditModal()"
+        style="padding:9px 20px; border:1px solid #cbd5e1; border-radius:7px; background:#fff; color:#374151; cursor:pointer; font-weight:500;">Cancel</button>
+      <button onclick="saveEditResponse()"
+        style="padding:9px 20px; border:none; border-radius:7px; background:#0f766e; color:#fff; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:6px;">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openEditModal() {
+    document.getElementById('editResponseModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeEditModal() {
+    document.getElementById('editResponseModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  // Close on outside click
+  document.getElementById('editResponseModal').addEventListener('click', function (e) {
+    if (e.target === this) closeEditModal();
+  });
+
+  async function saveEditResponse() {
+    const form = document.getElementById('editResponseForm');
+    const alertEl = document.getElementById('editModalAlert');
+    const answers = {};
+
+    // Collect all named inputs/selects/textareas
+    const elements = form.querySelectorAll('input[name], textarea[name], select[name]');
+    // For radio groups, only collect checked one
+    const seen = new Set();
+    elements.forEach(el => {
+      if (!el.name || el.name === 'csrfmiddlewaretoken') return;
+      const qId = el.name.replace('q_', '');
+      if (el.type === 'radio') {
+        if (!seen.has(qId) || el.checked) {
+          if (el.checked) { answers[qId] = el.value; seen.add(qId); }
+          else if (!seen.has(qId)) { answers[qId] = null; }
+        }
+      } else {
+        answers[qId] = el.value;
+      }
+    });
+
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const resp = await fetch('{% url "questionnaires:api_update_response" response.pk %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ answers })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        alertEl.innerHTML = '<div style="background:#dcfce7; color:#166534; padding:10px 14px; border-radius:6px; border:1px solid #bbf7d0;"><i class="fas fa-check-circle mr-2"></i>' + data.message + '</div>';
+        alertEl.style.display = 'block';
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        alertEl.innerHTML = '<div style="background:#fee2e2; color:#991b1b; padding:10px 14px; border-radius:6px; border:1px solid #fecaca;"><i class="fas fa-exclamation-circle mr-2"></i>' + data.message + '</div>';
+        alertEl.style.display = 'block';
+      }
+    } catch (e) {
+      alertEl.innerHTML = '<div style="background:#fee2e2; color:#991b1b; padding:10px 14px; border-radius:6px;">Error saving. Please try again.</div>';
+      alertEl.style.display = 'block';
+    }
+  }
+</script>
 {% endblock %}
