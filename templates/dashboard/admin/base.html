@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en" class="h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,16 +11,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="{% static 'css/admin-dashboard.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
-    
+
     <style>
         :root {
-            --admin-primary: #10b981;  /* Light medical blue */
-            --admin-primary-dark: #0d6efd;  /* Darker shade */
-            --admin-secondary: #000000;  /* Black */
-            --admin-success: #198754;  /* Green */
-            --admin-warning: #ffc107;  /* Yellow */
-            --admin-danger: #dc3545;  /* Red */
-            --admin-light: #f8f9fa;  /* Very light blue */
+            --admin-primary: #10b981;
+            /* Light medical blue */
+            --admin-primary-dark: #0d6efd;
+            /* Darker shade */
+            --admin-secondary: #000000;
+            /* Black */
+            --admin-success: #198754;
+            /* Green */
+            --admin-warning: #ffc107;
+            /* Yellow */
+            --admin-danger: #dc3545;
+            /* Red */
+            --admin-light: #f8f9fa;
+            /* Very light blue */
         }
 
         * {
@@ -30,229 +38,256 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff;  /* White background */
-            color: #000000;  /* Black text for visibility */
+            background-color: #ffffff;
+            /* White background */
+            color: #000000;
+            /* Black text for visibility */
         }
-        
+
         .navbar-custom {
             background: var(--admin-primary);
             box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);
         }
-        
+
         .navbar-custom .navbar-brand,
         .navbar-custom .nav-link {
             color: white !important;
         }
-        
+
         .navbar-custom .nav-link:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 6px;
         }
-        
+
         .sidebar {
             background: #ffffff;
             min-height: calc(100vh - 56px);
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
             padding: 20px 0;
         }
-        
+
         .sidebar .nav-link {
-            color: #495057;  /* Dark gray text */
+            color: #495057;
+            /* Dark gray text */
             padding: 12px 20px;
             margin: 2px 10px;
             border-radius: 8px;
             transition: all 0.3s ease;
             font-weight: 500;
         }
-        
+
         .sidebar .nav-link:hover {
             background-color: var(--admin-light);
             color: var(--admin-primary);
             transform: translateX(4px);
         }
-        
+
         .sidebar .nav-link.active {
             background-color: var(--admin-primary);
             color: white;
         }
-        
+
         .main-content {
             padding: 15px;
             max-width: 1400px;
             margin: 0 auto;
         }
-        
+
         .admin-main-content {
-            background-color: #ffffff;  /* White background */
-            color: #000000;  /* Black text for visibility */
+            background-color: #ffffff;
+            /* White background */
+            color: #000000;
+            /* Black text for visibility */
             min-height: calc(100vh - 56px);
         }
-        
+
         .card {
-            border: 1px solid #dee2e6;  /* Lighter border */
+            border: 1px solid #dee2e6;
+            /* Lighter border */
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             transition: all 0.2s ease;
         }
-        
+
         .card h2 {
-            color: #000000;  /* Black text for H2 headings */
+            color: #000000;
+            /* Black text for H2 headings */
         }
-        
+
         .card:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         .card-header {
             background: var(--admin-primary);
             color: white;
             border-radius: 8px 8px 0 0 !important;
             border: none;
-        
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 3px solid var(--admin-primary);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-        }
-        
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--admin-primary);
-        }
-        
-        .alert {
-            border: none;
-            border-radius: 8px;
-            padding: 15px 20px;
-        }
-        
-        .alert-info {
-            background-color: var(--admin-light);
-            color: var(--admin-primary);
-            border-left: 4px solid var(--admin-primary);
-        }
-        
-        .alert h5 {
-            color: var(--admin-primary) !important;
-            font-weight: 700;
-        }
-        
-        .alert p {
-            color: var(--admin-secondary) !important;
-        }
+
+            .stat-card {
+                background: white;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+                border-left: 3px solid var(--admin-primary);
+            }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: var(--admin-primary);
+            }
+
+            .alert {
+                border: none;
+                border-radius: 8px;
+                padding: 15px 20px;
+            }
+
+            .alert-info {
+                background-color: var(--admin-light);
+                color: var(--admin-primary);
+                border-left: 4px solid var(--admin-primary);
+            }
+
+            .alert h5 {
+                color: var(--admin-primary) !important;
+                font-weight: 700;
+            }
+
+            .alert p {
+                color: var(--admin-secondary) !important;
+            }
     </style>
 </head>
-<body>
-<div class="admin-container">
-    <!-- Left Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-shield-alt sidebar-logo"></i>
-            <span class="sidebar-title">Admin</span>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item {% if 'admin/dashboard' in request.path %}active{% endif %}">
-                <i class="fas fa-tachometer-alt nav-icon"></i>
-                Dashboard
-            </a>
-            <a href="{% url 'dashboard:admin:user_list' %}" class="nav-item {% if 'admin/users' in request.path %}active{% endif %}">
-                <i class="fas fa-users nav-icon"></i>
-                Users
-            </a>
-            <a href="{% url 'patients:list' %}" class="nav-item {% if 'patients' in request.path %}active{% endif %}">
-                <i class="fas fa-user-injured nav-icon"></i>
-                Patients
-            </a>
-            <a href="{% url 'questionnaires:response_list' %}" class="nav-item {% if 'responses' in request.path %}active{% endif %}">
-                <i class="fas fa-clipboard-check nav-icon"></i>
-                Responses
-            </a>
-            <a href="{% url 'screening:session_list' %}" class="nav-item {% if 'screening' in request.path %}active{% endif %}">
-                <i class="fas fa-stethoscope nav-icon"></i>
-                Screening
-            </a>
-            <a href="{% url 'dashboard:admin:questionnaire_list' %}" class="nav-item {% if 'questionnaires' in request.path %}active{% endif %}">
-                <i class="fas fa-clipboard-list nav-icon"></i>
-                Questionnaires
-            </a>
-            <a href="{% url 'questionnaires:builder' %}" class="nav-item {% if 'builder' in request.path %}active{% endif %}">
-                <i class="fas fa-magic nav-icon"></i>
-                Questionnaire Builder
-            </a>
-            <a href="{% url 'dashboard:admin:device_list' %}" class="nav-item {% if 'admin/devices' in request.path %}active{% endif %}">
-                <i class="fas fa-tablet-alt nav-icon"></i>
-                Devices
-            </a>
-            <a href="{% url 'dashboard:admin:audit_logs' %}" class="nav-item {% if 'admin/audit-logs' in request.path %}active{% endif %}">
-                <i class="fas fa-history nav-icon"></i>
-                Audit Logs
-            </a>
-            <a href="{% url 'dashboard:admin:system_settings' %}" class="nav-item {% if 'admin/settings' in request.path %}active{% endif %}">
-                <i class="fas fa-cog nav-icon"></i>
-                Settings
-            </a>
-        </nav>
-    </aside>
 
-    <!-- Main Content -->
-    <div class="admin-main-content">
-        <header class="admin-header">
-            <div class="header-left">
-                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+<body>
+    <div class="admin-container">
+        <!-- Left Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-shield-alt sidebar-logo"></i>
+                <span class="sidebar-title">Admin</span>
             </div>
-            <div class="header-right">
-                <div class="user-menu-wrapper">
-                    <button type="button" class="user-menu-button" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                        {% if request.user %}
-                            <img class="user-avatar" src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|default:request.user.email|default:"User" }}&background=0D8ABC&color=fff" alt="">
-                            <span class="user-name">{{ request.user.get_full_name|default:request.user.email|default:"User" }}</span>
-                        {% else %}
-                            <img class="user-avatar" src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="">
+            <nav class="sidebar-nav">
+                <a href="{% url 'dashboard:admin_dashboard' %}"
+                    class="nav-item {% if 'admin/dashboard' in request.path %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt nav-icon"></i>
+                    Dashboard
+                </a>
+                <a href="{% url 'dashboard:admin:user_list' %}"
+                    class="nav-item {% if 'admin/users' in request.path %}active{% endif %}">
+                    <i class="fas fa-users nav-icon"></i>
+                    Users
+                </a>
+                <a href="{% url 'patients:list' %}"
+                    class="nav-item {% if 'patients' in request.path %}active{% endif %}">
+                    <i class="fas fa-user-injured nav-icon"></i>
+                    Patients
+                </a>
+                <a href="{% url 'questionnaires:response_list' %}"
+                    class="nav-item {% if 'responses' in request.path %}active{% endif %}">
+                    <i class="fas fa-clipboard-check nav-icon"></i>
+                    Responses
+                </a>
+                <a href="{% url 'screening:session_list' %}"
+                    class="nav-item {% if 'screening' in request.path %}active{% endif %}">
+                    <i class="fas fa-stethoscope nav-icon"></i>
+                    Screening
+                </a>
+                <a href="{% url 'questionnaires:list' %}"
+                    class="nav-item {% if 'questionnaires' in request.path %}active{% endif %}">
+                    <i class="fas fa-clipboard-list nav-icon"></i>
+                    Questionnaires
+                </a>
+                <a href="{% url 'questionnaires:builder' %}"
+                    class="nav-item {% if 'builder' in request.path %}active{% endif %}">
+                    <i class="fas fa-magic nav-icon"></i>
+                    Questionnaire Builder
+                </a>
+                <a href="{% url 'dashboard:admin:device_list' %}"
+                    class="nav-item {% if 'admin/devices' in request.path %}active{% endif %}">
+                    <i class="fas fa-tablet-alt nav-icon"></i>
+                    Devices
+                </a>
+                <a href="{% url 'dashboard:admin:audit_logs' %}"
+                    class="nav-item {% if 'admin/audit-logs' in request.path %}active{% endif %}">
+                    <i class="fas fa-history nav-icon"></i>
+                    Audit Logs
+                </a>
+                <a href="{% url 'dashboard:admin:system_settings' %}"
+                    class="nav-item {% if 'admin/settings' in request.path %}active{% endif %}">
+                    <i class="fas fa-cog nav-icon"></i>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="admin-main-content">
+            <header class="admin-header">
+                <div class="header-left">
+                    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu-wrapper">
+                        <button type="button" class="user-menu-button" id="user-menu-button" aria-expanded="false"
+                            aria-haspopup="true">
+                            {% if request.user %}
+                            {% with display_name=request.user.get_full_name|default:request.user.email|default:'User' %}
+                            <img class="user-avatar"
+                                src="https://ui-avatars.com/api/?name={{ display_name|urlencode }}&background=0D8ABC&color=fff"
+                                alt="">
+                            <span class="user-name">{{ display_name }}</span>
+                            {% endwith %}
+                            {% else %}
+                            <img class="user-avatar"
+                                src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="">
                             <span class="user-name">User</span>
-                        {% endif %}
-                        <i class="fas fa-chevron-down user-menu-icon"></i>
-                    </button>
-                    <div class="user-dropdown-menu hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                        <a href="{% url 'logout' %}" class="dropdown-item" role="menuitem" tabindex="-1">Sign out</a>
+                            {% endif %}
+                            <i class="fas fa-chevron-down user-menu-icon"></i>
+                        </button>
+                        <div class="user-dropdown-menu hidden" role="menu" aria-orientation="vertical"
+                            aria-labelledby="user-menu-button" tabindex="-1">
+                            <a href="{% url 'logout' %}" class="dropdown-item" role="menuitem" tabindex="-1">Sign
+                                out</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <main class="admin-main-area">
-            {% block admin_content %}{% endblock %}
-        </main>
+            <main class="admin-main-area">
+                {% block admin_content %}{% endblock %}
+            </main>
+        </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const userMenuButton = document.getElementById('user-menu-button');
-        const userDropdownMenu = userMenuButton ? userMenuButton.nextElementSibling : null;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userDropdownMenu = userMenuButton ? userMenuButton.nextElementSibling : null;
 
-        if (userMenuButton && userDropdownMenu) {
-            userMenuButton.addEventListener('click', () => {
-                userDropdownMenu.classList.toggle('hidden');
-            });
+            if (userMenuButton && userDropdownMenu) {
+                userMenuButton.addEventListener('click', () => {
+                    userDropdownMenu.classList.toggle('hidden');
+                });
 
-            window.addEventListener('click', (event) => {
-                if (!userMenuButton.contains(event.target) && !userDropdownMenu.contains(event.target)) {
-                    userDropdownMenu.classList.add('hidden');
-                }
-            });
-        }
-    });
-</script>
-{% block extra_js %}{% endblock %}
+                window.addEventListener('click', (event) => {
+                    if (!userMenuButton.contains(event.target) && !userDropdownMenu.contains(event.target)) {
+                        userDropdownMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>

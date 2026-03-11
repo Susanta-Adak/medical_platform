@@ -14,9 +14,6 @@
       </p>
     </div>
     <div class="btn-group">
-      <a href="{% url 'patients:detail' patient_id=patient.patient_id %}" class="btn btn-outline-primary btn-sm">
-        <i class="fas fa-user me-2"></i>View Details
-      </a>
       <a href="{% url 'patients:update' patient_id=patient.patient_id %}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-edit me-2"></i>Edit Patient
       </a>
@@ -24,153 +21,105 @@
   </div>
 
   <!-- Patient Summary Cards -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card border-primary">
-        <div class="card-body text-center">
-          <i class="fas fa-user-injured fa-2x text-primary mb-2"></i>
-          <h6 class="card-title">Patient ID</h6>
-          <p class="card-text fw-bold">{{ patient.patient_id }}</p>
-        </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div class="card border-t-4 border-t-emerald-500 flex-1">
+      <div class="card-body text-center p-4">
+        <i class="fas fa-user-injured text-3xl text-emerald-500 mb-2"></i>
+        <h6 class="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-1">Patient ID</h6>
+        <p class="text-xl font-bold mb-0">{{ patient.patient_id }}</p>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-success">
-        <div class="card-body text-center">
-          <i class="fas fa-birthday-cake fa-2x text-success mb-2"></i>
-          <h6 class="card-title">Age</h6>
-          <p class="card-text fw-bold">{{ patient.age|default:"N/A" }}</p>
-        </div>
+
+    <div class="card border-t-4 border-t-blue-500 flex-1">
+      <div class="card-body text-center p-4">
+        <i class="fas fa-birthday-cake text-3xl text-blue-500 mb-2"></i>
+        <h6 class="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-1">Age</h6>
+        <p class="text-xl font-bold mb-0">{{ patient.age|default:"N/A" }}</p>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-info">
-        <div class="card-body text-center">
-          <i class="fas fa-venus-mars fa-2x text-info mb-2"></i>
-          <h6 class="card-title">Gender</h6>
-          <p class="card-text fw-bold">{{ patient.get_gender_display }}</p>
-        </div>
+
+    <div class="card border-t-4 border-t-purple-500 flex-1">
+      <div class="card-body text-center p-4">
+        <i class="fas fa-venus-mars text-3xl text-purple-500 mb-2"></i>
+        <h6 class="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-1">Gender</h6>
+        <p class="text-xl font-bold mb-0">{{ patient.get_gender_display }}</p>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-warning">
-        <div class="card-body text-center">
-          <i class="fas fa-phone fa-2x text-warning mb-2"></i>
-          <h6 class="card-title">Phone</h6>
-          <p class="card-text fw-bold">{{ patient.phone_number|default:"N/A" }}</p>
-        </div>
+
+    <div class="card border-t-4 border-t-amber-500 flex-1">
+      <div class="card-body text-center p-4">
+        <i class="fas fa-phone text-3xl text-amber-500 mb-2"></i>
+        <h6 class="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-1">Phone</h6>
+        <p class="text-xl font-bold mb-0">{{ patient.phone_number|default:"N/A" }}</p>
       </div>
     </div>
   </div>
 
   <!-- Medical Information -->
-  <div class="row mb-4">
-    <div class="col-md-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="flex-1">
       <div class="card">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-heartbeat me-2"></i>Medical Information
+        <div class="px-6 py-4 bg-emerald-50 border-b border-gray-200">
+          <h5 class="mb-0 text-emerald-800 font-semibold flex items-center">
+            <i class="fas fa-heartbeat mr-2 text-emerald-600"></i>Medical Information
           </h5>
         </div>
         <div class="card-body">
           {% if medical_record %}
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Blood Type:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ medical_record.blood_type|default:"N/A" }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Blood Type:</strong>
+            <span class="font-medium">{{ medical_record.blood_type|default:"N/A" }}</span>
           </div>
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Height:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ medical_record.height|default:"N/A" }} cm
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Height:</strong>
+            <span class="font-medium">{{ medical_record.height|default:"N/A" }} cm</span>
           </div>
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Weight:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ medical_record.weight|default:"N/A" }} kg
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Weight:</strong>
+            <span class="font-medium">{{ medical_record.weight|default:"N/A" }} kg</span>
           </div>
           {% if medical_record.allergies %}
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Allergies:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ medical_record.allergies }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Allergies:</strong>
+            <span class="font-medium text-right">{{ medical_record.allergies }}</span>
           </div>
           {% endif %}
           {% if medical_record.chronic_conditions %}
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Chronic Conditions:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ medical_record.chronic_conditions }}
-            </div>
+          <div class="flex flex-col py-2 border-b border-gray-100">
+            <strong class="text-gray-600 mb-1">Chronic Conditions:</strong>
+            <span class="font-medium">{{ medical_record.chronic_conditions }}</span>
           </div>
           {% endif %}
           {% else %}
-          <p class="text-muted">No medical record found.</p>
+          <p class="text-gray-500 italic">No medical record found.</p>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="flex-1">
       <div class="card">
-        <div class="card-header bg-info text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-user me-2"></i>Patient Information
+        <div class="px-6 py-4 bg-blue-50 border-b border-gray-200">
+          <h5 class="mb-0 text-blue-800 font-semibold flex items-center">
+            <i class="fas fa-user-circle mr-2 text-blue-600"></i>Patient Information
           </h5>
         </div>
         <div class="card-body">
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Date of Birth:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ patient.date_of_birth }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Date of Birth:</strong>
+            <span class="font-medium">{{ patient.date_of_birth }}</span>
           </div>
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Email:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ patient.email|default:"N/A" }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Email:</strong>
+            <span class="font-medium">{{ patient.email|default:"N/A" }}</span>
           </div>
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Address:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ patient.address|default:"N/A" }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Address:</strong>
+            <span class="font-medium text-right max-w-xs">{{ patient.address|default:"N/A" }}</span>
           </div>
-          <hr>
-          <div class="row">
-            <div class="col-sm-4">
-              <strong>Created:</strong>
-            </div>
-            <div class="col-sm-8">
-              {{ patient.created_at|date:"M d, Y" }}
-            </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <strong class="text-gray-600">Created:</strong>
+            <span class="font-medium">{{ patient.created_at|date:"M d, Y" }}</span>
           </div>
         </div>
       </div>
@@ -178,85 +127,77 @@
   </div>
 
   <!-- Recent Activity -->
-  <div class="row">
-    <div class="col-md-4">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="flex-1">
       <div class="card">
-        <div class="card-header bg-success text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-stethoscope me-2"></i>Recent Vital Signs
+        <div class="px-6 py-4 bg-rose-50 border-b border-gray-200">
+          <h5 class="mb-0 text-rose-800 font-semibold flex items-center">
+            <i class="fas fa-stethoscope mr-2 text-rose-600"></i>Recent Vital Signs
           </h5>
         </div>
         <div class="card-body">
           {% if vital_signs %}
           {% for vital in vital_signs %}
-          <div class="border-bottom pb-2 mb-2">
-            <small class="text-muted">{{ vital.recorded_at|date:"M d, Y H:i" }}</small>
-            <div class="row">
-              <div class="col-6">
-                <strong>BP:</strong> {{ vital.systolic_bp }}/{{ vital.diastolic_bp }}
-              </div>
-              <div class="col-6">
-                <strong>HR:</strong> {{ vital.heart_rate }}
-              </div>
+          <div class="border-b border-gray-100 pb-3 mb-3">
+            <small class="text-gray-500 block mb-1">{{ vital.recorded_at|date:"M d, Y H:i" }}</small>
+            <div class="flex justify-between text-sm mb-1">
+              <span><strong>BP:</strong> {{ vital.systolic_bp }}/{{ vital.diastolic_bp }}</span>
+              <span><strong>HR:</strong> {{ vital.heart_rate }}</span>
             </div>
-            <div class="row">
-              <div class="col-6">
-                <strong>Temp:</strong> {{ vital.temperature }}°F
-              </div>
-              <div class="col-6">
-                <strong>SpO2:</strong> {{ vital.oxygen_saturation }}%
-              </div>
+            <div class="flex justify-between text-sm">
+              <span><strong>Temp:</strong> {{ vital.temperature }}°F</span>
+              <span><strong>SpO2:</strong> {{ vital.oxygen_saturation }}%</span>
             </div>
           </div>
           {% endfor %}
           {% else %}
-          <p class="text-muted">No vital signs recorded.</p>
+          <p class="text-gray-500 italic">No vital signs recorded.</p>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="flex-1">
       <div class="card">
-        <div class="card-header bg-warning text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-notes-medical me-2"></i>Recent Notes
+        <div class="px-6 py-4 bg-amber-50 border-b border-gray-200">
+          <h5 class="mb-0 text-amber-800 font-semibold flex items-center">
+            <i class="fas fa-notes-medical mr-2 text-amber-600"></i>Recent Notes
           </h5>
         </div>
         <div class="card-body">
           {% if notes %}
           {% for note in notes %}
-          <div class="border-bottom pb-2 mb-2">
-            <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
-            <div class="fw-bold">{{ note.title }}</div>
-            <div class="small">{{ note.content|truncatewords:20 }}</div>
+          <div class="border-b border-gray-100 pb-3 mb-3">
+            <small class="text-gray-500 block mb-1">{{ note.created_at|date:"M d, Y H:i" }}</small>
+            <div class="font-bold text-gray-800">{{ note.title }}</div>
+            <div class="text-sm text-gray-600 mt-1">{{ note.content|truncatewords:20 }}</div>
           </div>
           {% endfor %}
           {% else %}
-          <p class="text-muted">No notes recorded.</p>
+          <p class="text-gray-500 italic">No notes recorded.</p>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="flex-1">
       <div class="card">
-        <div class="card-header bg-secondary text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-file-medical me-2"></i>Recent Documents
+        <div class="px-6 py-4 bg-indigo-50 border-b border-gray-200">
+          <h5 class="mb-0 text-indigo-800 font-semibold flex items-center">
+            <i class="fas fa-file-medical mr-2 text-indigo-600"></i>Recent Documents
           </h5>
         </div>
         <div class="card-body">
           {% if documents %}
           {% for document in documents %}
-          <div class="border-bottom pb-2 mb-2">
-            <small class="text-muted">{{ document.uploaded_at|date:"M d, Y" }}</small>
-            <div class="fw-bold">{{ document.title }}</div>
-            <div class="small">{{ document.document_type }}</div>
+          <div class="border-b border-gray-100 pb-3 mb-3">
+            <small class="text-gray-500 block mb-1">{{ document.uploaded_at|date:"M d, Y" }}</small>
+            <div class="font-bold text-gray-800">{{ document.title }}</div>
+            <div class="text-sm text-gray-600 mt-1">{{ document.document_type }}</div>
           </div>
           {% endfor %}
           {% else %}
-          <p class="text-muted">No documents uploaded.</p>
+          <p class="text-gray-500 italic">No documents uploaded.</p>
           {% endif %}
         </div>
       </div>

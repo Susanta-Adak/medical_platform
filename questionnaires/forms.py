@@ -167,12 +167,15 @@ class ResponseForm(forms.ModelForm):
                 'accept': '.pdf,.xls,.xlsx,.csv,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp'
             })
         elif question.question_type == question.TYPE_MULTIPLE_CHOICE:
-            # For multiple choice, use ChoiceField with RadioSelect
-            field_class = forms.ChoiceField
             choices = [(opt.id, opt.text) for opt in question.options.all()]
             if choices:
+                if getattr(question, 'allow_multiple_selections', False):
+                    field_class = forms.MultipleChoiceField
+                    field_kwargs['widget'] = forms.CheckboxSelectMultiple()
+                else:
+                    field_class = forms.ChoiceField
+                    field_kwargs['widget'] = forms.RadioSelect()
                 field_kwargs['choices'] = choices
-                field_kwargs['widget'] = forms.RadioSelect()
             else:
                 # If no options, fallback to text field
                 field_class = forms.CharField
@@ -260,13 +263,21 @@ class ResponseForm(forms.ModelForm):
                 answer.date_answer = None
 
                 if question.question_type == question.TYPE_MULTIPLE_CHOICE:
-                    # value is option ID
+                    # value is option ID or list of IDs
                     if value:
-                        try:
-                            opt = question.options.get(id=value)
-                            answer.option_answer.add(opt)
-                        except QuestionOption.DoesNotExist:
-                            answer.text_answer = str(value) if value else ''
+                        if isinstance(value, list) or isinstance(value, tuple):
+                            for val in value:
+                                try:
+                                    opt = question.options.get(id=val)
+                                    answer.option_answer.add(opt)
+                                except QuestionOption.DoesNotExist:
+                                    pass
+                        else:
+                            try:
+                                opt = question.options.get(id=value)
+                                answer.option_answer.add(opt)
+                            except QuestionOption.DoesNotExist:
+                                answer.text_answer = str(value) if value else ''
                 elif question.question_type == question.TYPE_ATTACHMENT:
                     # value is a file
                     print(f"DEBUG: Processing attachment question {question.id}: {value}")

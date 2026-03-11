@@ -4,7 +4,12 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['13.204.125.52', 'your-domain.com', 'www.your-domain.com', 'localhost']
+ALLOWED_HOSTS = ['13.204.125.52', 'your-domain.com', 'www.your-domain.com', 'localhost', 'health.sclab.in']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://health.sclab.in',
+    'https://www.health.sclab.in',
+]
 
 # Database
 # Use PostgreSQL on AWS

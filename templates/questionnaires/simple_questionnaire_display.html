@@ -31,6 +31,12 @@
                         {{ question.question_text }}
                         {% if question.is_required %}<span class="text-danger ms-1">*</span>{% endif %}
                     </h5>
+                    {% if question.reference_image %}
+                    <div class="question-reference-image mb-4 ms-2">
+                        <img src="{{ question.reference_image.url }}" alt="Reference Image" class="img-fluid rounded"
+                            style="max-height: 250px;">
+                    </div>
+                    {% endif %}
 
                     <!-- Yes/No Question -->
                     {% if question.question_type == 'yes_no' %}
@@ -76,9 +82,14 @@
                     <div class="radio-group ms-2">
                         {% for option in question.options.all %}
                         <div class="form-check mb-3">
+                            {% if question.allow_multiple_selections %}
+                            <input class="form-check-input custom-checkbox" type="checkbox"
+                                name="question_{{ question.id }}" id="opt_{{ option.id }}" value="{{ option.id }}">
+                            {% else %}
                             <input class="form-check-input custom-radio" type="radio" name="question_{{ question.id }}"
                                 id="opt_{{ option.id }}" value="{{ option.id }}" {{
                                 question.is_required|yesno:'required,' }}>
+                            {% endif %}
                             <label class="form-check-label radio-label fs-5 d-flex align-items-center"
                                 for="opt_{{ option.id }}">
                                 {% if option.option_image %}

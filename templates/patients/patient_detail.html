@@ -3,167 +3,223 @@
 {% block page_title %}{{ patient.get_full_name }} - Patient Details{% endblock %}
 
 {% block admin_content %}
-<div class="row">
-  <div class="col-md-8">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-          <h2 style="margin:0;">{{ patient.get_full_name }}</h2>
-          <small class="text-muted">Patient Details</small>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Left Column: Main Details (2/3 width) -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="card overflow-hidden h-full">
+      <!-- Header -->
+      <div
+        class="card-header bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200 px-6 py-5 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div class="flex items-center gap-4">
+          <div
+            class="h-16 w-16 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-bold uppercase shadow-sm">
+            {{ patient.first_name.0 }}{{ patient.last_name.0 }}
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 m-0">{{ patient.get_full_name }}</h2>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">{{
+                patient.patient_id }}</span>
+              <span class="text-sm text-gray-500">Patient Profile</span>
+            </div>
+          </div>
         </div>
-        <div class="btn-group">
-          <a href="{% url 'patients:update' patient.patient_id %}" class="btn btn-outline-primary">
-            <i class="fas fa-edit me-2"></i>Edit
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'patients:update' patient.patient_id %}" class="btn btn-primary text-sm px-4 py-2">
+            <i class="fas fa-edit mr-2"></i>Edit
           </a>
-          <a href="{% url 'patients:dashboard' patient.patient_id %}" class="btn btn-outline-info">
-            <i class="fas fa-chart-line me-2"></i>Dashboard
+          <a href="{% url 'patients:dashboard' patient.patient_id %}" class="btn btn-secondary text-sm px-4 py-2">
+            <i class="fas fa-chart-line mr-2"></i>Dashboard
           </a>
-          <a href="{% url 'patients:list' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to List
+          <a href="{% url 'patients:list' %}" class="btn btn-secondary bg-white text-sm px-4 py-2 hover:bg-gray-50">
+            <i class="fas fa-arrow-left mr-2"></i>List
           </a>
         </div>
       </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">Personal Information</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Patient ID:</strong></td>
-                <td><span class="badge bg-primary">{{ patient.patient_id }}</span></td>
-              </tr>
-              <tr>
-                <td><strong>Full Name:</strong></td>
-                <td>{{ patient.get_full_name }}</td>
-              </tr>
-              <tr>
-                <td><strong>Date of Birth:</strong></td>
-                <td>{{ patient.date_of_birth|date:"F j, Y" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Age:</strong></td>
-                <td>{{ patient.age }} years</td>
-              </tr>
-              <tr>
-                <td><strong>Gender:</strong></td>
-                <td>{{ patient.get_gender_display }}</td>
-              </tr>
-            </table>
+
+      <!-- Body -->
+      <div class="card-body px-8 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+          <!-- Personal Info -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center">
+              <i class="fas fa-user text-emerald-500 mr-2"></i>Personal Info
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Patient ID</span>
+                <span class="font-medium text-gray-800">{{ patient.patient_id }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Full Name</span>
+                <span class="font-medium text-gray-800">{{ patient.get_full_name }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Date of Birth</span>
+                <span class="font-medium text-gray-800">{{ patient.date_of_birth|date:"F j, Y" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Age</span>
+                <span class="font-medium text-gray-800">{{ patient.age }} years</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Gender</span>
+                <span class="font-medium text-gray-800">{{ patient.get_gender_display }}</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">Contact Information</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Phone:</strong></td>
-                <td>{{ patient.phone_number|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Email:</strong></td>
-                <td>{{ patient.email|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Address:</strong></td>
-                <td>{{ patient.address|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>City:</strong></td>
-                <td>{{ patient.city|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>State:</strong></td>
-                <td>{{ patient.state|default:"Not provided" }}</td>
-              </tr>
-            </table>
+
+          <!-- Contact Info -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center">
+              <i class="fas fa-address-book text-blue-500 mr-2"></i>Contact Info
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Phone</span>
+                <span class="font-medium text-gray-800">{{ patient.phone_number|default:"Not provided" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Email</span>
+                <span class="font-medium text-gray-800 truncate max-w-[150px]" title="{{ patient.email }}">{{
+                  patient.email|default:"Not provided" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Address</span>
+                <span class="font-medium text-gray-800 text-right max-w-[150px]">{{ patient.address|default:"Not
+                  provided" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">City</span>
+                <span class="font-medium text-gray-800">{{ patient.city|default:"Not provided" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">State</span>
+                <span class="font-medium text-gray-800">{{ patient.state|default:"Not provided" }}</span>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div class="row mt-4">
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">Emergency Contact</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Contact Name:</strong></td>
-                <td>{{ patient.emergency_contact_name|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Contact Phone:</strong></td>
-                <td>{{ patient.emergency_contact_phone|default:"Not provided" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Relationship:</strong></td>
-                <td>{{ patient.emergency_contact_relation|default:"Not provided" }}</td>
-              </tr>
-            </table>
+
+          <!-- Emergency Contact Structure -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center mt-2">
+              <i class="fas fa-heartbeat text-rose-500 mr-2"></i>Emergency Contact
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Contact Name</span>
+                <span class="font-medium text-gray-800">{{ patient.emergency_contact_name|default:"--" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Phone</span>
+                <span class="font-medium text-gray-800">{{ patient.emergency_contact_phone|default:"--" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Relationship</span>
+                <span class="font-medium text-gray-800">{{ patient.emergency_contact_relation|default:"--" }}</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="col-md-6">
-            <h5 class="text-muted mb-3">System Information</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Created:</strong></td>
-                <td>{{ patient.created_at|date:"F j, Y, g:i A" }}</td>
-              </tr>
-              <tr>
-                <td><strong>Last Updated:</strong></td>
-                <td>{{ patient.updated_at|timesince }} ago</td>
-              </tr>
-              <tr>
-                <td><strong>Created By:</strong></td>
-                <td>{{ patient.created_by.get_full_name|default:patient.created_by.username|default:"System" }}</td>
-              </tr>
-            </table>
+
+          <!-- System Info -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center mt-2">
+              <i class="fas fa-server text-purple-500 mr-2"></i>System Track
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Created At</span>
+                <span class="font-medium text-gray-800 text-sm">{{ patient.created_at|date:"M j, Y H:i" }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Last Update</span>
+                <span class="font-medium text-gray-800 text-sm">{{ patient.updated_at|timesince }} ago</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                <span class="text-gray-500 text-sm">Created By</span>
+                <span class="font-medium text-gray-800 text-sm">{{
+                  patient.created_by.get_full_name|default:patient.created_by.username|default:"System" }}</span>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
-  
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Quick Actions</h5>
+
+  <!-- Right Column: Actions and Stats (1/3 width) -->
+  <div class="space-y-6">
+
+    <!-- Stats widgets -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+        <div
+          class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 mb-3 border border-blue-100">
+          <i class="fas fa-clipboard-list text-blue-500 text-lg"></i>
+        </div>
+        <h4 class="text-2xl font-bold text-gray-800 mb-0">{{ patient.questionnaire_responses.count }}</h4>
+        <p class="text-[0.65rem] text-gray-500 font-bold uppercase tracking-widest mt-1">Responses</p>
       </div>
-      <div class="card-body">
-        <div class="d-grid gap-2">
-          <a href="{% url 'patients:update' patient.patient_id %}" class="btn btn-primary">
-            <i class="fas fa-edit me-2"></i>Edit Patient
+
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+        <div
+          class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 mb-3 border border-amber-100">
+          <i class="fas fa-birthday-cake text-amber-500 text-lg"></i>
+        </div>
+        <h4 class="text-2xl font-bold text-gray-800 mb-0">{{ patient.age }}</h4>
+        <p class="text-[0.65rem] text-gray-500 font-bold uppercase tracking-widest mt-1">Years Old</p>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card overflow-hidden">
+      <div class="px-5 py-4 bg-gray-50 border-b border-gray-200">
+        <h5 class="mb-0 text-gray-800 font-semibold text-lg flex items-center"><i
+            class="fas fa-bolt text-yellow-500 mr-2"></i>Quick Actions</h5>
+      </div>
+      <div class="p-0">
+        <div class="flex flex-col">
+          <a href="{% url 'patients:update' patient.patient_id %}"
+            class="flex items-center px-5 py-4 border-b border-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 transition duration-150">
+            <div class="w-8 flex justify-center"><i class="fas fa-edit"></i></div>
+            <span class="font-medium">Edit Patient Details</span>
+            <i class="fas fa-chevron-right ml-auto text-xs text-gray-400"></i>
           </a>
-          <a href="{% url 'patients:dashboard' patient.patient_id %}" class="btn btn-info">
-            <i class="fas fa-chart-line me-2"></i>View Dashboard
+
+          <a href="{% url 'patients:dashboard' patient.patient_id %}"
+            class="flex items-center px-5 py-4 border-b border-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition duration-150">
+            <div class="w-8 flex justify-center"><i class="fas fa-chart-line"></i></div>
+            <span class="font-medium">Patient Dashboard</span>
+            <i class="fas fa-chevron-right ml-auto text-xs text-gray-400"></i>
           </a>
-          <a href="{% url 'questionnaires:response_list' %}?patient={{ patient.patient_id }}" class="btn btn-success">
-            <i class="fas fa-clipboard-list me-2"></i>View Questionnaires
-          </a>
-          <hr>
-          <a href="{% url 'patients:delete' patient.patient_id %}" class="btn btn-outline-danger">
-            <i class="fas fa-trash me-2"></i>Delete Patient
+
+          <a href="{% url 'questionnaires:response_list' %}?patient={{ patient.patient_id }}"
+            class="flex items-center px-5 py-4 border-b border-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-700 transition duration-150">
+            <div class="w-8 flex justify-center"><i class="fas fa-clipboard-list"></i></div>
+            <span class="font-medium">Questionnaires Summary</span>
+            <i class="fas fa-chevron-right ml-auto text-xs text-gray-400"></i>
           </a>
         </div>
       </div>
     </div>
-    
-    <div class="card mt-3">
-      <div class="card-header">
-        <h5 class="mb-0">Statistics</h5>
-      </div>
-      <div class="card-body">
-        <div class="text-center">
-          <div class="mb-3">
-            <h4 class="text-primary">{{ patient.questionnaire_responses.count }}</h4>
-            <small class="text-muted">Questionnaire Responses</small>
-          </div>
-          <div class="mb-3">
-            <h4 class="text-info">{{ patient.age }}</h4>
-            <small class="text-muted">Years Old</small>
-          </div>
-          <div>
-            <h4 class="text-success">{{ patient.get_gender_display }}</h4>
-            <small class="text-muted">Gender</small>
-          </div>
+
+    <!-- Danger Zone -->
+    <div class="card mt-6 border border-red-200 overflow-hidden shadow-sm">
+      <div class="card-body p-6 bg-red-50 text-center flex flex-col items-center">
+        <div class="h-10 w-10 bg-red-100 text-red-500 rounded-full flex justify-center items-center mb-3">
+          <i class="fas fa-exclamation-triangle"></i>
         </div>
+        <p class="text-sm text-red-600 mb-4 font-medium px-4">Warning: Permanently delete this patient. This action
+          cannot be undone.</p>
+        <a href="{% url 'patients:delete' patient.patient_id %}"
+          class="btn btn-danger w-full justify-center shadow-none border-red-200 hover:bg-red-600">
+          <i class="fas fa-trash-alt mr-2"></i>Delete Patient
+        </a>
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}

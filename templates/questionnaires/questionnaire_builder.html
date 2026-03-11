@@ -36,7 +36,12 @@
 
     <!-- Questions Section -->
     <div class="card">
-        <div class="card-body" data-questions-data="{% if questions_data %}{{ questions_data|safe }}{% endif %}">
+        <div class="card-body">
+            {% if questions_data %}
+            <script type="application/json" id="questionsDataJson">
+                {{ questions_data|safe }}
+            </script>
+            {% endif %}
             <div class="flex justify-between items-center mb-6">
                 <h2 class="h4 mb-0">Questions</h2>
                 <button onclick="addQuestion()" class="btn btn-secondary">
@@ -46,6 +51,18 @@
 
             <div id="questionsContainer" class="space-y-6">
                 <!-- Questions will be added here dynamically -->
+
+                <!-- Bottom Add Question Block (visible when questions exist) -->
+                <div id="bottomAddQuestionBtn" class="mt-6 hidden">
+                    <button onclick="addQuestion()"
+                        class="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all cursor-pointer group">
+                        <div
+                            class="h-10 w-10 rounded-full bg-gray-100 group-hover:bg-emerald-100 flex items-center justify-center mb-2 transition-colors">
+                            <i class="fas fa-plus text-lg"></i>
+                        </div>
+                        <span class="text-base font-medium">Add Question</span>
+                    </button>
+                </div>
             </div>
 
             <div id="emptyState" class="text-center py-12 text-gray-500">
@@ -74,6 +91,24 @@
                     <label class="form-label fw-semibold">Question *</label>
                     <textarea class="question-text form-textarea" rows="2"
                         placeholder="Enter your question here"></textarea>
+                </div>
+
+                <!-- Reference Image -->
+                <div class="mb-4 flex items-center gap-2">
+                    <label class="form-label fw-semibold mb-0">Reference Image (Optional)</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="this.nextElementSibling.click()">
+                        <i class="fas fa-plus"></i> Add Image
+                    </button>
+                    <input type="file" class="question-reference-image hidden" accept="image/*"
+                        onchange="handleQuestionImageUpload(this)">
+                    <div class="question-image-preview hidden ml-3 items-center gap-2">
+                        <img src="" alt="" class="img-thumbnail" style="max-height: 40px; max-width: 60px;">
+                        <button type="button" class="text-red-500 hover:text-red-700 text-sm"
+                            onclick="removeQuestionImage(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Question Type -->
@@ -111,6 +146,12 @@
 
                 <!-- Multiple Choice Options (hidden by default) -->
                 <div class="multiple-choice-options hidden">
+                    <div class="mb-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="question-allow-multiple mr-2">
+                            <span class="text-gray-300">Allow selecting multiple options (Checkboxes)</span>
+                        </label>
+                    </div>
                     <div class="flex justify-between items-center mb-4">
                         <label class="form-label fw-semibold">Options</label>
                         <button onclick="addOption(this)" class="btn btn-secondary btn-sm">
@@ -179,6 +220,45 @@
     let questionCounter = 0;
     let optionCounter = 0;
 
+    function handleQuestionImageUpload(input) {
+        const file = input.files[0];
+        const questionItem = input.closest('.question-item');
+        const previewDiv = questionItem.querySelector('.question-image-preview');
+
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                input.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image must be less than 5MB');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewDiv.querySelector('img').src = e.target.result;
+                previewDiv.classList.remove('hidden');
+                previewDiv.classList.add('flex');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeQuestionImage(btn) {
+        const previewDiv = btn.closest('.question-image-preview');
+        const questionItem = btn.closest('.question-item');
+        const input = questionItem.querySelector('.question-reference-image');
+
+        input.value = '';
+        previewDiv.classList.add('hidden');
+        previewDiv.classList.remove('flex');
+        questionItem.dataset.has_reference_image = 'false';
+        questionItem.dataset.reference_image_url = '';
+    }
+
     function addQuestion() {
         questionCounter++;
         const template = document.getElementById('questionTemplate');
@@ -188,12 +268,14 @@
         const questionItem = clone.querySelector('.question-item');
         questionItem.dataset.questionId = 'new_' + questionCounter;
 
-        // Add to container
+        // Add to container before the Add button
         const container = document.getElementById('questionsContainer');
-        container.appendChild(clone);
+        const addBtn = document.getElementById('bottomAddQuestionBtn');
+        container.insertBefore(clone, addBtn);
 
         // Hide empty state
         document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('bottomAddQuestionBtn').classList.remove('hidden');
 
         // Reorder questions
         updateQuestionNumbers();
@@ -233,8 +315,12 @@
 
         // Show empty state if no top-level questions
         const container = document.getElementById('questionsContainer');
-        if (container.children.length === 0) {
+        if (container.querySelectorAll('.question-item').length === 0) {
             document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('bottomAddQuestionBtn').classList.add('hidden');
+        } else {
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('bottomAddQuestionBtn').classList.remove('hidden');
         }
 
         // Reorder questions
@@ -384,12 +470,17 @@
                 const questionText = item.querySelector('.question-text').value.trim();
                 const questionType = item.querySelector('.question-type').value;
                 const isRequired = item.querySelector('.question-required').checked;
+                const allowMultiple = item.querySelector('.question-allow-multiple') ? item.querySelector('.question-allow-multiple').checked : false;
                 const itemId = item.dataset.dbId || item.dataset.questionId;
                 const triggerAnswer = item.dataset.triggerAnswer || null;
 
                 if (!questionText || !questionType) {
                     throw new Error('Please complete all question fields');
                 }
+
+                const imageInput = item.querySelector('.question-reference-image');
+                const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
+                const qIdForOpt = `q_${questions.length}`;
 
                 const question = {
                     id: itemId,
@@ -398,7 +489,10 @@
                     question_text: questionText,
                     type: questionType,
                     required: isRequired,
-                    order: questions.length + 1
+                    allow_multiple_selections: allowMultiple,
+                    order: questions.length + 1,
+                    reference_image_file: imageFile,
+                    reference_image_key: imageFile ? `ref_image_${qIdForOpt}` : null
                 };
 
                 // Add options for multiple choice questions
@@ -468,7 +562,7 @@
 
     // Add all files first and remove them from the JSON hierarchy to avoid serialization problems
     const cleanQuestions = JSON.parse(JSON.stringify(questions, (key, value) => {
-        if (key === 'image_file') return undefined;
+        if (key === 'image_file' || key === 'reference_image_file') return undefined;
         return value;
     }));
 
@@ -480,6 +574,9 @@
 
     // Attach the actual image files
     questions.forEach(q => {
+        if (q.reference_image_file && q.reference_image_key) {
+            formData.append(q.reference_image_key, q.reference_image_file);
+        }
         if (q.options) {
             q.options.forEach(opt => {
                 if (opt.image_key && opt.image_file) {
@@ -507,8 +604,8 @@
             console.log('Response data:', data);
             if (data.success) {
                 alert('Questionnaire ' + (isEditMode ? 'updated' : 'saved') + ' successfully!');
-                // Redirect to admin list
-                window.location.href = '/dashboard/admin/questionnaires/';
+                // Redirect to actual questionnaires list
+                window.location.href = '/questionnaires/';
             } else {
                 alert('Error: ' + data.error);
             }
@@ -538,12 +635,12 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function () {
         // Load existing questions if in edit mode
-        const questionsDataElement = document.querySelector('[data-questions-data]');
-        const questionsData = questionsDataElement ? JSON.parse(questionsDataElement.getAttribute('data-questions-data') || '[]') : [];
+        const questionsDataElement = document.getElementById('questionsDataJson');
+        const questionsData = questionsDataElement ? JSON.parse(questionsDataElement.textContent) : [];
 
         if (questionsData && questionsData.length > 0) {
-            // Clear the empty state
             document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('bottomAddQuestionBtn').classList.remove('hidden');
 
             // Rebuild hierarchy
             const questionMap = {};
@@ -600,6 +697,15 @@
             clone.querySelector('.question-type').value = existingData.type || '';
             clone.querySelector('.question-required').checked = existingData.required || false;
 
+            if (existingData.reference_image_url) {
+                const previewDiv = clone.querySelector('.question-image-preview');
+                previewDiv.querySelector('img').src = existingData.reference_image_url;
+                previewDiv.classList.remove('hidden');
+                previewDiv.classList.add('flex');
+                questionItem.dataset.has_reference_image = 'true';
+                questionItem.dataset.reference_image_url = existingData.reference_image_url;
+            }
+
             if (isFollowUp) {
                 questionItem.dataset.triggerAnswer = existingData.trigger_answer;
                 questionItem.classList.replace('border-gray-700', existingData.trigger_answer === 'yes' ? 'border-green-800' : 'border-red-800');
@@ -624,8 +730,9 @@
             }, 0);
         }
 
-        parentContainer.appendChild(clone);
-        return parentContainer.lastElementChild;
+        const addBtn = document.getElementById('bottomAddQuestionBtn');
+        parentContainer.insertBefore(clone, addBtn && parentContainer === document.getElementById('questionsContainer') ? addBtn : null);
+        return questionItem;
     }
 
     // Deprecated since we use addQuestionNode for rendering, keeping it around just in case
@@ -661,10 +768,12 @@
 
         // Add to container
         const container = document.getElementById('questionsContainer');
-        container.appendChild(clone);
+        const addBtn = document.getElementById('bottomAddQuestionBtn');
+        container.insertBefore(clone, addBtn);
 
         // Hide empty state
         document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('bottomAddQuestionBtn').classList.remove('hidden');
 
         updateQuestionNumbers();
     }

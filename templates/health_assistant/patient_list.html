@@ -28,29 +28,29 @@
                                 <span class="input-group-text">
                                     <i class="fas fa-search"></i>
                                 </span>
-                                <input type="text" class="form-control" id="searchInput" 
-                                       placeholder="Search by name, ID, or phone..." 
-                                       value="{{ request.GET.q|default:'' }}">
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Search by name, ID, or phone..."
+                                    value="{{ request.GET.q|default:'' }}">
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label for="genderFilter" class="form-label">Gender</label>
                             <select class="form-select" id="genderFilter">
                                 <option value="">All Genders</option>
-                                <option value="M" {% if request.GET.gender == 'M' %}selected{% endif %}>Male</option>
-                                <option value="F" {% if request.GET.gender == 'F' %}selected{% endif %}>Female</option>
-                                <option value="O" {% if request.GET.gender == 'O' %}selected{% endif %}>Other</option>
+                                <option value="M" {% if request.GET.gender=='M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if request.GET.gender=='F' %}selected{% endif %}>Female</option>
+                                <option value="O" {% if request.GET.gender=='O' %}selected{% endif %}>Other</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="dateFrom" class="form-label">From Date</label>
-                            <input type="date" class="form-control" id="dateFrom" 
-                                   value="{{ request.GET.date_from|default:'' }}">
+                            <input type="date" class="form-control" id="dateFrom"
+                                value="{{ request.GET.date_from|default:'' }}">
                         </div>
                         <div class="col-md-2">
                             <label for="dateTo" class="form-label">To Date</label>
-                            <input type="date" class="form-control" id="dateTo" 
-                                   value="{{ request.GET.date_to|default:'' }}">
+                            <input type="date" class="form-control" id="dateTo"
+                                value="{{ request.GET.date_to|default:'' }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">&nbsp;</label>
@@ -206,91 +206,91 @@
 
 {% block extra_js %}
 <script>
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
-// Force refresh to avoid caching issues
-const CACHE_BUSTER = new Date().getTime();
+    // Force refresh to avoid caching issues
+    const CACHE_BUSTER = new Date().getTime();
 
-let currentPage = 1;
-let currentQuery = '';
-let currentGender = '';
-let currentDateFrom = '';
-let currentDateTo = '';
+    let currentPage = 1;
+    let currentQuery = '';
+    let currentGender = '';
+    let currentDateFrom = '';
+    let currentDateTo = '';
 
-// Load patients on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, initializing patient list...');
-    console.log('Current user role check...');
-    
-    // Test authentication first
-    fetch('/health-assistant/api/test-auth/', {
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Auth test result:', data);
-        
-        // If auth works, try simple API call
-        if (data.authenticated) {
-            fetch('/health-assistant/api/search-patients/?q=test')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Simple API test:', data);
-                })
-                .catch(error => {
-                    console.error('Simple API test failed:', error);
-                });
-        }
-    })
-    .catch(error => {
-        console.error('Auth test failed:', error);
-    });
-    
-    // Check if we can access page
-    loadPatients();
-    
-    // Setup search form
-    document.getElementById('searchForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        currentPage = 1;
+    // Load patients on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Page loaded, initializing patient list...');
+        console.log('Current user role check...');
+
+        // Test authentication first
+        fetch('/health-assistant/api/test-auth/', {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Auth test result:', data);
+
+                // If auth works, try simple API call
+                if (data.authenticated) {
+                    fetch('/health-assistant/api/search-patients/?q=test')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Simple API test:', data);
+                        })
+                        .catch(error => {
+                            console.error('Simple API test failed:', error);
+                        });
+                }
+            })
+            .catch(error => {
+                console.error('Auth test failed:', error);
+            });
+
+        // Check if we can access page
         loadPatients();
-    });
-});
 
-function loadPatients() {
-    currentQuery = document.getElementById('searchInput').value;
-    currentGender = document.getElementById('genderFilter').value;
-    currentDateFrom = document.getElementById('dateFrom').value;
-    currentDateTo = document.getElementById('dateTo').value;
-    
-    const params = new URLSearchParams({
-        q: currentQuery,
-        gender: currentGender,
-        date_from: currentDateFrom,
-        date_to: currentDateTo,
-        page: currentPage
+        // Setup search form
+        document.getElementById('searchForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            currentPage = 1;
+            loadPatients();
+        });
     });
-    
-    console.log('Loading patients with params:', params.toString());
-    
-    // Show loading
-    document.getElementById('patientsTableBody').innerHTML = `
+
+    function loadPatients() {
+        currentQuery = document.getElementById('searchInput').value;
+        currentGender = document.getElementById('genderFilter').value;
+        currentDateFrom = document.getElementById('dateFrom').value;
+        currentDateTo = document.getElementById('dateTo').value;
+
+        const params = new URLSearchParams({
+            q: currentQuery,
+            gender: currentGender,
+            date_from: currentDateFrom,
+            date_to: currentDateTo,
+            page: currentPage
+        });
+
+        console.log('Loading patients with params:', params.toString());
+
+        // Show loading
+        document.getElementById('patientsTableBody').innerHTML = `
         <tr>
             <td colspan="8" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
@@ -300,37 +300,37 @@ function loadPatients() {
             </td>
         </tr>
     `;
-    
-    const apiUrl = `/health-assistant/api/search-patients/?${params.toString()}`;
-    console.log('Making API call to:', apiUrl);
-    
-    fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-        .then(response => {
-            console.log('API Response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+
+        const apiUrl = `/health-assistant/api/search-patients/?${params.toString()}`;
+        console.log('Making API call to:', apiUrl);
+
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             }
-            return response.json();
         })
-        .then(data => {
-            console.log('API Response data:', data);
-            console.log('Patients array:', data.patients);
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            displayPatients(data.patients || []);
-            updatePagination(data.pagination || {});
-            updatePatientCount(data.total_count || 0);
-        })
-        .catch(error => {
-            console.error('Error loading patients:', error);
-            document.getElementById('patientsTableBody').innerHTML = `
+            .then(response => {
+                console.log('API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response data:', data);
+                console.log('Patients array:', data.patients);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                displayPatients(data.patients || []);
+                updatePagination(data.pagination || {});
+                updatePatientCount(data.total_count || 0);
+            })
+            .catch(error => {
+                console.error('Error loading patients:', error);
+                document.getElementById('patientsTableBody').innerHTML = `
                 <tr>
                     <td colspan="8" class="text-center py-4 text-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -338,16 +338,16 @@ function loadPatients() {
                     </td>
                 </tr>
             `;
-        });
-}
+            });
+    }
 
-function displayPatients(patients) {
-    const tbody = document.getElementById('patientsTableBody');
-    
-    console.log('Displaying patients:', patients.length);
-    
-    if (patients.length === 0) {
-        tbody.innerHTML = `
+    function displayPatients(patients) {
+        const tbody = document.getElementById('patientsTableBody');
+
+        console.log('Displaying patients:', patients.length);
+
+        if (patients.length === 0) {
+            tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="text-center py-4">
                     <i class="fas fa-search me-2"></i>
@@ -355,247 +355,249 @@ function displayPatients(patients) {
                 </td>
             </tr>
         `;
-        return;
-    }
-    
-    let html = '';
-    patients.forEach((patient, index) => {
-        console.log(`Patient ${index}:`, patient);
-        
-        const firstName = patient.first_name || '';
-        const lastName = patient.last_name || '';
-        const fullName = firstName + ' ' + lastName;
-        const age = patient.age !== null && patient.age !== undefined ? patient.age : '-';
-        
-        // Generate avatar initials safely
-        let avatarInitials = '?';
-        if (firstName.length > 0 && lastName.length > 0) {
-            avatarInitials = firstName.charAt(0) + lastName.charAt(0);
-        } else if (firstName.length > 0) {
-            avatarInitials = firstName.charAt(0);
-        } else if (lastName.length > 0) {
-            avatarInitials = lastName.charAt(0);
+            return;
         }
-        
-        html += '<tr>' +
-            '<td><span class="badge bg-secondary">' + (patient.patient_id || 'N/A') + '</span></td>' +
-            '<td>' +
+
+        let html = '';
+        patients.forEach((patient, index) => {
+            console.log(`Patient ${index}:`, patient);
+
+            const firstName = patient.first_name || '';
+            const lastName = patient.last_name || '';
+            const fullName = firstName + ' ' + lastName;
+            const age = patient.age !== null && patient.age !== undefined ? patient.age : '-';
+
+            // Generate avatar initials safely
+            let avatarInitials = '?';
+            if (firstName.length > 0 && lastName.length > 0) {
+                avatarInitials = firstName.charAt(0) + lastName.charAt(0);
+            } else if (firstName.length > 0) {
+                avatarInitials = firstName.charAt(0);
+            } else if (lastName.length > 0) {
+                avatarInitials = lastName.charAt(0);
+            }
+
+            html += '<tr>' +
+                '<td><span class="badge bg-secondary">' + (patient.patient_id || 'N/A') + '</span></td>' +
+                '<td>' +
                 '<div class="d-flex align-items-center">' +
-                    '<div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">' + avatarInitials + '</div>' +
-                    '<div>' +
-                        '<div class="fw-semibold">' + fullName + '</div>' +
-                        '<small class="text-muted">' + (patient.email || 'No email') + '</small>' +
-                    '</div>' +
+                '<div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">' + avatarInitials + '</div>' +
+                '<div>' +
+                '<div class="fw-semibold">' + fullName + '</div>' +
+                '<small class="text-muted">' + (patient.email || 'No email') + '</small>' +
                 '</div>' +
-            '</td>' +
-            '<td>' + age + '</td>' +
-            '<td><span class="badge bg-info text-dark">' + (patient.gender_display || '-') + '</span></td>' +
-            '<td><i class="fas fa-phone me-1"></i>' + (patient.phone_number || '-') + '</td>' +
-            '<td>' + (patient.city || '-') + '</td>' +
-            '<td><small class="text-muted">' + formatDate(patient.created_at) + '</small></td>' +
-            '<td>' +
+                '</div>' +
+                '</td>' +
+                '<td>' + age + '</td>' +
+                '<td><span class="badge bg-info text-dark">' + (patient.gender_display || '-') + '</span></td>' +
+                '<td><i class="fas fa-phone me-1"></i>' + (patient.phone_number || '-') + '</td>' +
+                '<td>' + (patient.city || '-') + '</td>' +
+                '<td><small class="text-muted">' + formatDate(patient.created_at) + '</small></td>' +
+                '<td>' +
                 '<div class="btn-group" role="group">' +
-                    '<button type="button" class="btn btn-outline-primary btn-sm" onclick="editPatient(' + patient.id + ')" title="Edit Patient">' +
-                        '<i class="fas fa-user-edit"></i>' +
-                    '</button>' +
-                    '<button type="button" class="btn btn-outline-success btn-sm" onclick="startScreening(' + patient.id + ')" title="Start Screening">' +
-                        '<i class="fas fa-stethoscope"></i>' +
-                    '</button>' +
+                '<button type="button" class="btn btn-outline-primary btn-sm position-relative group" onclick="editPatient(' + patient.id + ')" aria-label="Edit Patient">' +
+                '<i class="fas fa-user-edit"></i>' +
+                '<span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity duration-200 z-50">Edit Patient</span>' +
+                '</button>' +
+                '<button type="button" class="btn btn-outline-success btn-sm position-relative group" onclick="startScreening(' + patient.id + ')" aria-label="Start Screening">' +
+                '<i class="fas fa-stethoscope"></i>' +
+                '<span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity duration-200 z-50">Start Screening</span>' +
+                '</button>' +
                 '</div>' +
-            '</td>' +
-        '</tr>';
-    });
-    
-    console.log('Final HTML being inserted:', html);
-    tbody.innerHTML = html;
-}
-
-function editPatient(patientId) {
-    console.log('Editing patient:', patientId);
-    
-    fetch(`/health-assistant/api/get-patient/${patientId}/`)
-        .then(response => {
-            console.log('Get patient response:', response);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Patient data received:', data);
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            const patient = data.patient;
-            document.getElementById('editPatientId').value = patient.id;
-            document.getElementById('editFirstName').value = patient.first_name;
-            document.getElementById('editLastName').value = patient.last_name;
-            document.getElementById('editDateOfBirth').value = patient.date_of_birth;
-            document.getElementById('editGender').value = patient.gender;
-            document.getElementById('editPhone').value = patient.phone_number;
-            document.getElementById('editEmail').value = patient.email || '';
-            document.getElementById('editCity').value = patient.city || '';
-            document.getElementById('editAddress').value = patient.address || '';
-            
-            const modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Error loading patient:', error);
-            alert(`Error loading patient details: ${error.message}`);
+                '</td>' +
+                '</tr>';
         });
-}
 
-function updatePatient() {
-    const patientId = document.getElementById('editPatientId').value;
-    const formData = new FormData(document.getElementById('editPatientForm'));
-    
-    // Get CSRF token
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch(`/health-assistant/api/patients/${patientId}/update/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-        },
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editPatientModal'));
-            modal.hide();
-            
-            // Show success message
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success alert-dismissible fade show';
-            successAlert.innerHTML = `
+        console.log('Final HTML being inserted:', html);
+        tbody.innerHTML = html;
+    }
+
+    function editPatient(patientId) {
+        console.log('Editing patient:', patientId);
+
+        fetch(`/health-assistant/api/get-patient/${patientId}/`)
+            .then(response => {
+                console.log('Get patient response:', response);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Patient data received:', data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                const patient = data.patient;
+                document.getElementById('editPatientId').value = patient.id;
+                document.getElementById('editFirstName').value = patient.first_name;
+                document.getElementById('editLastName').value = patient.last_name;
+                document.getElementById('editDateOfBirth').value = patient.date_of_birth;
+                document.getElementById('editGender').value = patient.gender;
+                document.getElementById('editPhone').value = patient.phone_number;
+                document.getElementById('editEmail').value = patient.email || '';
+                document.getElementById('editCity').value = patient.city || '';
+                document.getElementById('editAddress').value = patient.address || '';
+
+                const modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error loading patient:', error);
+                alert(`Error loading patient details: ${error.message}`);
+            });
+    }
+
+    function updatePatient() {
+        const patientId = document.getElementById('editPatientId').value;
+        const formData = new FormData(document.getElementById('editPatientForm'));
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/health-assistant/api/patients/${patientId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPatientModal'));
+                    modal.hide();
+
+                    // Show success message
+                    const successAlert = document.createElement('div');
+                    successAlert.className = 'alert alert-success alert-dismissible fade show';
+                    successAlert.innerHTML = `
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 Patient updated successfully!
             `;
-            
-            // Insert the alert after the card header
-            const cardHeader = document.querySelector('.card-header');
-            if (cardHeader) {
-                cardHeader.insertAdjacentHTML('afterend', successAlert.outerHTML);
-            }
-            
-            // Clear the URL parameters
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
-            
-            // Refresh the patient list to show updated data
-            setTimeout(() => {
-                loadPatients();
-            }, 1000);
-        } else {
-            alert(`Error updating patient: ${data.error || 'Unknown error'}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error updating patient:', error);
-        alert(`Error updating patient: ${error.message}`);
-    });
-}
 
-function startScreening(patientId) {
-    window.location.href = `/health-assistant/screening/${patientId}/`;
-}
+                    // Insert the alert after the card header
+                    const cardHeader = document.querySelector('.card-header');
+                    if (cardHeader) {
+                        cardHeader.insertAdjacentHTML('afterend', successAlert.outerHTML);
+                    }
 
-function refreshPatients() {
-    currentPage = 1;
-    loadPatients();
-}
+                    // Clear the URL parameters
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, '', newUrl);
 
-function exportPatients() {
-    const params = new URLSearchParams({
-        q: currentQuery,
-        gender: currentGender,
-        date_from: currentDateFrom,
-        date_to: currentDateTo,
-        export: 'csv'
-    });
-    
-    window.location.href = `/health-assistant/api/search-patients/?${params.toString()}`;
-}
-
-function updatePagination(pagination) {
-    const paginationEl = document.getElementById('pagination');
-    
-    if (!pagination.total_pages || pagination.total_pages <= 1) {
-        paginationEl.innerHTML = '';
-        return;
+                    // Refresh the patient list to show updated data
+                    setTimeout(() => {
+                        loadPatients();
+                    }, 1000);
+                } else {
+                    alert(`Error updating patient: ${data.error || 'Unknown error'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating patient:', error);
+                alert(`Error updating patient: ${error.message}`);
+            });
     }
-    
-    let paginationHTML = '';
-    
-    // Previous button
-    if (pagination.has_previous) {
-        paginationHTML += `
+
+    function startScreening(patientId) {
+        window.location.href = `/health-assistant/screening/${patientId}/`;
+    }
+
+    function refreshPatients() {
+        currentPage = 1;
+        loadPatients();
+    }
+
+    function exportPatients() {
+        const params = new URLSearchParams({
+            q: currentQuery,
+            gender: currentGender,
+            date_from: currentDateFrom,
+            date_to: currentDateTo,
+            export: 'csv'
+        });
+
+        window.location.href = `/health-assistant/api/search-patients/?${params.toString()}`;
+    }
+
+    function updatePagination(pagination) {
+        const paginationEl = document.getElementById('pagination');
+
+        if (!pagination.total_pages || pagination.total_pages <= 1) {
+            paginationEl.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '';
+
+        // Previous button
+        if (pagination.has_previous) {
+            paginationHTML += `
             <li class="page-item">
                 <a class="page-link" href="#" onclick="changePage(${pagination.previous_page})">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
         `;
-    }
-    
-    // Page numbers
-    for (let i = 1; i <= pagination.total_pages; i++) {
-        const activeClass = i === pagination.current_page ? 'active' : '';
-        paginationHTML += `
+        }
+
+        // Page numbers
+        for (let i = 1; i <= pagination.total_pages; i++) {
+            const activeClass = i === pagination.current_page ? 'active' : '';
+            paginationHTML += `
             <li class="page-item ${activeClass}">
                 <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
             </li>
         `;
-    }
-    
-    // Next button
-    if (pagination.has_next) {
-        paginationHTML += `
+        }
+
+        // Next button
+        if (pagination.has_next) {
+            paginationHTML += `
             <li class="page-item">
                 <a class="page-link" href="#" onclick="changePage(${pagination.next_page})">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
         `;
+        }
+
+        paginationEl.innerHTML = paginationHTML;
     }
-    
-    paginationEl.innerHTML = paginationHTML;
-}
 
-function changePage(page) {
-    currentPage = page;
-    loadPatients();
-}
-
-function updatePatientCount(count) {
-    const countEl = document.getElementById('patientCount');
-    if (count === 0) {
-        countEl.textContent = 'No patients found';
-    } else if (count === 1) {
-        countEl.textContent = '1 patient found';
-    } else {
-        countEl.textContent = `${count} patients found`;
+    function changePage(page) {
+        currentPage = page;
+        loadPatients();
     }
-}
 
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-}
+    function updatePatientCount(count) {
+        const countEl = document.getElementById('patientCount');
+        if (count === 0) {
+            countEl.textContent = 'No patients found';
+        } else if (count === 1) {
+            countEl.textContent = '1 patient found';
+        } else {
+            countEl.textContent = `${count} patients found`;
+        }
+    }
 
-function showToast(message) {
-    document.getElementById('toastMessage').textContent = message;
-    const toast = new bootstrap.Toast(document.getElementById('successToast'));
-    toast.show();
-}
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showToast(message) {
+        document.getElementById('toastMessage').textContent = message;
+        const toast = new bootstrap.Toast(document.getElementById('successToast'));
+        toast.show();
+    }
 </script>
 {% endblock %}

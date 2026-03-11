@@ -102,6 +102,8 @@ class Question(models.Model):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, related_name='questions')
     question_text = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
+    allow_multiple_selections = models.BooleanField(default=False)
+    reference_image = models.ImageField(upload_to='question_references/', blank=True, null=True)
     
     # Branching fields for Yes/No nested questions
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='follow_ups')

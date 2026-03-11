@@ -290,7 +290,13 @@
                     selectedProduct = data.products[0];
                     showDeviceSelection();
                     loadDevices();
+                } else {
+                    showAlert('No active screening products configured. Please contact the administrator.', 'warning');
                 }
+            })
+            .catch(error => {
+                console.error("Error loading products:", error);
+                showAlert('Failed to load screening products.', 'danger');
             });
     }
 
@@ -301,8 +307,8 @@
     function loadDevices() {
         makeAjaxRequest('/health-assistant/api/get-devices/')
             .then(data => {
-                if (data.devices) {
-                    const deviceCards = document.getElementById('deviceCards');
+                const deviceCards = document.getElementById('deviceCards');
+                if (data.devices && data.devices.length > 0) {
                     deviceCards.innerHTML = data.devices.map(device => `
                     <div class="col-md-4 mb-3">
                         <div class="card device-card h-100 ${!device.is_connected ? 'opacity-50' : ''}" 
@@ -319,7 +325,14 @@
                         </div>
                     </div>
                 `).join('');
+                } else {
+                    deviceCards.innerHTML = '<div class="col-12"><div class="alert alert-warning">No connected devices found. Please ensure a device is turned on and connected.</div></div>';
                 }
+            })
+            .catch(error => {
+                console.error("Error loading devices:", error);
+                const deviceCards = document.getElementById('deviceCards');
+                deviceCards.innerHTML = '<div class="col-12"><div class="alert alert-danger">Error loading devices.</div></div>';
             });
     }
 

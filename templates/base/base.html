@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en" class="h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,58 +12,80 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
- <body class="bg-gray-50 font-sans antialiased flex flex-col min-h-screen">
-     {% if user.is_authenticated %}
-     <header class="bg-white shadow-sm">
-         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div class="flex justify-between h-16">
-                 <div class="flex items-center">
-                     <div class="flex-shrink-0 flex items-center">
-                         <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
-                         <span class="text-xl font-bold text-gray-800">Medical Data <span class="text-primary">Platform</span></span>
-                     </div>
-                     <nav class="hidden md:ml-10 md:flex space-x-2">
+
+<body class="bg-gray-50 font-sans antialiased flex flex-col min-h-screen">
+    {% if user.is_authenticated %}
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-heartbeat text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">Medical Data <span
+                                class="text-primary">Platform</span></span>
+                    </div>
+                    <nav class="hidden md:ml-10 md:flex space-x-2">
                         <a href="{% url 'patients:list' %}" class="nav-link">Patients</a>
                     </nav>
-                 </div>
-                 <div class="hidden md:ml-4 md:flex-shrink-0 md:flex md:items-center">
+                </div>
+                <div class="hidden md:ml-4 md:flex-shrink-0 md:flex md:items-center">
                     <a href="{% url 'logout' %}"
-                        class="px-4 py-2 rounded bg-black text-black hover:bg-gray-800 transition">
+                        class="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition">
                         Logout
                     </a>
                 </div>
-             </div>
-         </div>
-     </header>
-     {% endif %}
- 
+                <!-- Mobile menu button -->
+                <div class="flex items-center md:hidden">
+                    <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                        aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200 bg-white">
+                <a href="{% url 'patients:list' %}"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Patients</a>
+                <a href="{% url 'logout' %}"
+                    class="block px-3 py-2 mt-4 text-center rounded-md text-base font-medium bg-black text-white hover:bg-gray-800 mx-2">Logout</a>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
     <!-- Main Content -->
-     <main class="flex-grow">
-         {% if user.is_authenticated %}
-         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-{% include "messages.html" %}
-         {% endif %}
+    <main class="flex-grow">
+        {% if user.is_authenticated %}
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {% include "messages.html" %}
+            {% endif %}
 
-         {% block content %}{% endblock %}
+            {% block content %}{% endblock %}
 
-         {% if user.is_authenticated %}
-         </div>
-         {% endif %}
-     </main>
+            {% if user.is_authenticated %}
+        </div>
+        {% endif %}
+    </main>
 
     <!-- Footer -->
-     {% if user.is_authenticated %}
-     <footer class="bg-white border-t border-gray-200">
-         <div class="max-w-7xl mx-auto py-6 px-4 overflow-hidden sm:px-6 lg:px-8">
-             <p class="text-center text-sm text-gray-500">
-                 &copy; {% now "Y" %} Medical Data Collection Platform. All rights reserved.
-             </p>
-         </div>
-     </footer>
-     {% endif %}
+    {% if user.is_authenticated %}
+    <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto py-6 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                &copy; {% now "Y" %} Medical Data Collection Platform. All rights reserved.
+            </p>
+        </div>
+    </footer>
+    {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

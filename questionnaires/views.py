@@ -28,7 +28,7 @@ class QuestionnaireListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_staff
     
     def get_queryset(self):
-        return Questionnaire.objects.filter(is_active=True).order_by('-created_at')
+        return Questionnaire.objects.all().order_by('-created_at')
 
 class QuestionnaireCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Questionnaire

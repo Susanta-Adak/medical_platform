@@ -22,7 +22,13 @@ AWS_DEFAULT_ACL = None
 
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # Defaulting to allow all hosts in development since the domain changes. In production, restrict this.
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://health.sclab.in',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.User'
@@ -169,3 +175,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if AWS_ACCESS_KEY_ID:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Session and Security Settings
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE = False  # Set to True in prod.py
+CSRF_COOKIE_SECURE = False     # Set to True in prod.py

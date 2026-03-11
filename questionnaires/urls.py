@@ -12,6 +12,8 @@ urlpatterns = [
     path('<int:pk>/', views.QuestionnaireDetailView.as_view(), name='detail'),
     path('<int:pk>/update/', views.QuestionnaireUpdateView.as_view(), name='update'),
     path('<int:pk>/delete/', views.QuestionnaireDeleteView.as_view(), name='delete'),
+    path('<int:pk>/clone/', views_builder.clone_questionnaire, name='clone'),
+    path('<int:pk>/toggle-visibility/', views_builder.toggle_visibility, name='toggle_visibility'),
     path('<int:pk>/start/', views.questionnaire_start, name='questionnaire_start'),
     path('thank-you/<int:pk>/', views.questionnaire_thank_you, name='questionnaire_thank_you'),
     

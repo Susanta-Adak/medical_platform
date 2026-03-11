@@ -799,13 +799,18 @@ def api_submit_questionnaire(request):
         # Process all form data
         answer_count = 0
         
-        for key, value in request.POST.items():
+        for key in request.POST.keys():
             if key.startswith('question_'):
                 try:
                     question_id = key.split('_')[1]
                     question = questionnaire.questions.get(id=question_id)
                     
                     if question.question_type == question.TYPE_ATTACHMENT:
+                        continue
+                        
+                    value_list = request.POST.getlist(key)
+                    if not value_list or (len(value_list) == 1 and not value_list[0]):
+                        # Skip empty submissions unless required (handled elsewhere)
                         continue
                     
                     # Create answer
@@ -818,24 +823,15 @@ def api_submit_questionnaire(request):
                     # Handle different question types
                     if question.question_type == question.TYPE_MULTIPLE_CHOICE:
                         # For choice questions, value is option ID
-                        if isinstance(value, list):
-                            # Multiple choice
-                            for option_id in value:
-                                try:
-                                    option = question.options.get(id=option_id)
-                                    answer.option_answer.add(option)
-                                except:
-                                    answer.text_answer = str(option_id)
-                        else:
-                            # Single choice
+                        for val in value_list:
                             try:
-                                option = question.options.get(id=value)
+                                option = question.options.get(id=val)
                                 answer.option_answer.add(option)
                             except:
-                                answer.text_answer = str(value)
+                                answer.text_answer = str(val)
                     else:
-                        # For text answers
-                        answer.text_answer = str(value)
+                        # For text answers, just use the first item
+                        answer.text_answer = str(value_list[0])
                     
                     answer.save()
                     answer_count += 1

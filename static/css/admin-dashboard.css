@@ -212,6 +212,16 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     margin-top: 1rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 768px) {
+    table {
+        display: table;
+        overflow-x: visible;
+    }
 }
 
 th,

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -84,6 +84,7 @@ def save_questionnaire_api(request):
                 question_text=question_data['question_text'],
                 question_type=question_data['type'],
                 is_required=question_data['required'],
+                allow_multiple_selections=question_data.get('allow_multiple_selections', False),
                 order=question_data['order']
             )
             
@@ -91,6 +92,11 @@ def save_questionnaire_api(request):
             frontend_id = question_data.get('id')
             if frontend_id is not None:
                 question_map[str(frontend_id)] = question
+                
+            ref_image_key = question_data.get('reference_image_key')
+            if ref_image_key and ref_image_key in request.FILES:
+                question.reference_image = request.FILES[ref_image_key]
+                question.save()
                 
         # Second pass to set parent relationships
         for question_data in data['questions']:
@@ -186,6 +192,7 @@ def edit_questionnaire_builder(request, pk):
                     question.question_text = question_data['question_text']
                     question.question_type = question_data['type']
                     question.is_required = question_data['required']
+                    question.allow_multiple_selections = question_data.get('allow_multiple_selections', False)
                     question.order = question_data['order']
                     question.save()
                 except (ValueError, TypeError, Question.DoesNotExist):
@@ -194,12 +201,18 @@ def edit_questionnaire_builder(request, pk):
                         question_text=question_data['question_text'],
                         question_type=question_data['type'],
                         is_required=question_data['required'],
+                        allow_multiple_selections=question_data.get('allow_multiple_selections', False),
                         order=question_data['order']
                     )
                 
                 processed_question_ids.append(question.id)
                 if frontend_id is not None:
                     question_map[str(frontend_id)] = question
+                    
+                ref_image_key = question_data.get('reference_image_key')
+                if ref_image_key and ref_image_key in request.FILES:
+                    question.reference_image = request.FILES[ref_image_key]
+                    question.save()
                     
             # Delete questions that were removed by the builder (this handles cascades to answers safely)
             Question.objects.filter(questionnaire=questionnaire).exclude(id__in=processed_question_ids).delete()
@@ -283,10 +296,12 @@ def edit_questionnaire_builder(request, pk):
             'question_text': question.question_text,
             'type': question.question_type,
             'required': question.is_required,
+            'allow_multiple_selections': question.allow_multiple_selections,
             'order': question.order,
             'parent_id': question.parent_id if question.parent else None,
             'trigger_answer': question.trigger_answer,
-            'display_number': question.get_display_number()
+            'display_number': question.get_display_number(),
+            'reference_image_url': question.reference_image.url if question.reference_image else None
         }
         
         if question.question_type == 'multiple_choice':
@@ -305,3 +320,89 @@ def edit_questionnaire_builder(request, pk):
         'questions_data': json.dumps(questions_data),
         'page_title': 'Edit Questionnaire'
     })
+
+@login_required
+@require_POST
+def clone_questionnaire(request, pk):
+    """Clone an existing questionnaire to create a new version."""
+    original = get_object_or_404(Questionnaire, pk=pk)
+    
+    # Extract the leading number from the version string to increment the major version
+    import re
+    current_version = str(original.version)
+    match = re.search(r'^(\d+)', current_version)
+    if match:
+        next_major = int(match.group(1)) + 1
+    else:
+        next_major = 2
+        
+    new_version = f"{next_major}.0"
+    
+    # Ensure this new version doesn't clash with existing ones (e.g., if cloned multiple times)
+    while Questionnaire.objects.filter(title=original.title, version=new_version).exists():
+        next_major += 1
+        new_version = f"{next_major}.0"
+    new_q = Questionnaire.objects.create(
+        title=original.title,
+        description=original.description,
+        version=new_version,
+        status=Questionnaire.STATUS_DRAFT,
+        questionnaire_type=original.questionnaire_type,
+        created_by=request.user
+    )
+    
+    question_map = {}
+    old_questions = list(original.questions.all().order_by('order', 'id'))
+    
+    # First pass: clone questions and options without parents
+    for old_q in old_questions:
+        new_question = Question.objects.create(
+            questionnaire=new_q,
+            question_text=old_q.question_text,
+            question_type=old_q.question_type,
+            is_required=old_q.is_required,
+            allow_multiple_selections=old_q.allow_multiple_selections,
+            order=old_q.order,
+            trigger_answer=old_q.trigger_answer,
+        )
+        if old_q.reference_image:
+            new_question.reference_image = old_q.reference_image
+            new_question.save()
+            
+        question_map[old_q.id] = new_question
+        
+        # Clone options
+        for old_opt in old_q.options.all():
+            new_opt = QuestionOption.objects.create(
+                question=new_question,
+                text=old_opt.text,
+                order=old_opt.order
+            )
+            if old_opt.option_image:
+                new_opt.option_image = old_opt.option_image
+                new_opt.save()
+                
+    # Second pass: relink parents
+    for old_q in old_questions:
+        if old_q.parent_id and old_q.parent_id in question_map:
+            new_question = question_map[old_q.id]
+            new_question.parent = question_map[old_q.parent_id]
+            new_question.save()
+            
+    messages.success(request, f"Successfully created a new version (v{new_q.version}) of {new_q.title}")
+    
+    # Redirect to the builder so they can edit it
+    return redirect('questionnaires:builder_edit', pk=new_q.pk)
+
+@login_required
+@require_POST
+def toggle_visibility(request, pk):
+    """Toggle whether a questionnaire is visible to health assistants."""
+    questionnaire = get_object_or_404(Questionnaire, pk=pk)
+    questionnaire.is_active = not questionnaire.is_active
+    questionnaire.save()
+    
+    status_text = "visible" if questionnaire.is_active else "hidden"
+    messages.success(request, f"Questionnaire '{questionnaire.title} (v{questionnaire.version})' is now {status_text} to Health Assistants.")
+    
+    return redirect('questionnaires:list')
