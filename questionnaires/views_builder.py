@@ -143,7 +143,11 @@ def save_questionnaire_api(request):
 @login_required
 def questionnaire_list_builder(request):
     """List view for questionnaires with builder interface."""
-    questionnaires = Questionnaire.objects.filter(created_by=request.user).order_by('-created_at')
+    if request.user.is_staff:
+        questionnaires = Questionnaire.objects.all().order_by('-created_at')
+    else:
+        questionnaires = Questionnaire.objects.filter(created_by=request.user).order_by('-created_at')
+        
     return render(request, 'questionnaires/questionnaire_list_builder.html', {
         'questionnaires': questionnaires
     })
@@ -151,7 +155,12 @@ def questionnaire_list_builder(request):
 @login_required
 def edit_questionnaire_builder(request, pk):
     """Edit existing questionnaire with builder interface."""
-    questionnaire = get_object_or_404(Questionnaire, pk=pk, created_by=request.user)
+    # For staff/superusers, allow editing any questionnaire. 
+    # For regular users, restrict to their own creations.
+    if request.user.is_staff:
+        questionnaire = get_object_or_404(Questionnaire, pk=pk)
+    else:
+        questionnaire = get_object_or_404(Questionnaire, pk=pk, created_by=request.user)
     
     if request.method == 'POST':
         # Handle saving edited questionnaire
@@ -249,6 +258,7 @@ def edit_questionnaire_builder(request, pk):
                         for option_data in question_data['options']:
                             db_id = option_data.get('db_id')
                             opt_obj = None
+                            opt_db_id = None
                             try:
                                 opt_db_id = int(db_id)
                                 opt_obj = QuestionOption.objects.get(id=opt_db_id, question=question)
@@ -307,8 +317,11 @@ def edit_questionnaire_builder(request, pk):
         if question.question_type == 'multiple_choice':
             question_data['options'] = [
                 {
+                    'id': opt.id,
                     'text': opt.text,
-                    'order': opt.order
+                    'order': opt.order,
+                    'has_image': bool(opt.option_image),
+                    'image_url': opt.option_image.url if opt.option_image else None
                 }
                 for opt in question.options.all()
             ]

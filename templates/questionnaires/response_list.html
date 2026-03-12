@@ -92,7 +92,7 @@
                 {% endif %}
               </td>
               <td>
-                <strong>{{ response.questionnaire.title }}</strong>
+                <strong class="text-gray-900">{{ response.questionnaire.title|default:"Evaluation"|default:"Clinical Record" }}</strong>
                 {% if response.questionnaire.questionnaire_type %}
                 <span class="badge bg-secondary ms-1">{{ response.questionnaire.get_questionnaire_type_display }}</span>
                 {% endif %}
@@ -135,10 +135,15 @@
                 {% endif %}
               </td>
               <td>
-                <div class="btn-group btn-group-sm">
-                  <a href="{% url 'questionnaires:response_detail' response.pk %}" class="btn btn-outline-primary">
-                    <i class="fas fa-eye"></i> View
+                <div class="flex space-x-2">
+                  <a href="{% url 'questionnaires:response_detail' response.pk %}"
+                    class="btn btn-primary bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded text-xs flex items-center">
+                    <i class="fas fa-eye mr-1"></i> View
                   </a>
+                  <button onclick="openEditModal({{ response.pk }}, '{{ response.questionnaire.title|escapejs }}')"
+                    class="btn btn-secondary bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs flex items-center">
+                    <i class="fas fa-edit mr-1"></i> Edit
+                  </button>
                 </div>
               </td>
             </tr>
@@ -207,6 +212,45 @@
   </div>
 </div>
 
+<!-- ========== Edit Response Modal (Refined Tailwind Popup) ========== -->
+<div id="editResponseModal" class="hidden fixed inset-0 z-[999] overflow-y-auto bg-slate-900/60 backdrop-blur-sm transition-all flex items-center justify-center p-4">
+    <!-- Modal panel -->
+    <div class="bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-2xl border border-gray-200 scale-100 flex flex-col max-h-[90vh]">
+      <!-- Header with Gradient Green Theme -->
+      <div class="bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-5 flex justify-between items-center relative overflow-hidden flex-shrink-0">
+        <div class="absolute inset-0 bg-white opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
+        <h3 class="text-lg font-bold text-white flex items-center relative z-10">
+          <i class="fas fa-edit mr-3 text-white/80"></i> Edit Response
+          <span class="mx-2 opacity-30">|</span>
+          <span id="modalQuestionnaireTitle" class="font-medium text-emerald-50 text-sm truncate max-w-[200px]">Evaluation</span>
+        </h3>
+        <button onclick="closeEditModal()" class="text-white hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition text-xl leading-none relative z-10">&times;</button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-8 py-6 overflow-y-auto bg-gray-50/50 flex-grow">
+        <div id="editModalAlert" class="hidden mb-6"></div>
+        <form id="editResponseForm" class="space-y-6">
+          <div id="modalLoading" class="text-center py-16">
+            <div class="inline-block animate-spin h-10 w-10 border-4 border-teal-600 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure data...</p>
+          </div>
+          <!-- Dynamic fields loaded here -->
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-white px-8 py-5 flex justify-end space-x-3 border-t border-gray-100 flex-shrink-0">
+        <button onclick="closeEditModal()" class="px-6 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-500 bg-white hover:bg-gray-50 transition shadow-sm uppercase tracking-wider">
+          Cancel
+        </button>
+        <button id="saveBtn" onclick="saveEditResponse(this)" class="px-8 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition flex items-center shadow-lg hover:shadow-teal-200/50 uppercase tracking-widest">
+          <i class="fas fa-check-circle mr-2"></i> Commit Changes
+        </button>
+      </div>
+    </div>
+</div>
+
 <script>
   function filterResponses() {
     const questionnaireId = document.getElementById('questionnaireFilter').value;
@@ -217,18 +261,10 @@
     let url = '{% url "questionnaires:response_list" %}?';
     const params = [];
 
-    if (questionnaireId) {
-      params.push('questionnaire=' + questionnaireId);
-    }
-    if (patientId) {
-      params.push('patient=' + patientId);
-    }
-    if (dateFrom) {
-      params.push('date_from=' + dateFrom);
-    }
-    if (dateTo) {
-      params.push('date_to=' + dateTo);
-    }
+    if (questionnaireId) params.push('questionnaire=' + questionnaireId);
+    if (patientId) params.push('patient=' + patientId);
+    if (dateFrom) params.push('date_from=' + dateFrom);
+    if (dateTo) params.push('date_to=' + dateTo);
 
     window.location.href = url + params.join('&');
   }
@@ -242,31 +278,146 @@
     let url = '{% url "questionnaires:download_responses" %}?';
     const params = [];
 
-    if (questionnaireId) {
-      params.push('questionnaire=' + questionnaireId);
-    }
-    if (patientId) {
-      params.push('patient=' + patientId);
-    }
-    if (dateFrom) {
-      params.push('date_from=' + dateFrom);
-    }
-    if (dateTo) {
-      params.push('date_to=' + dateTo);
-    }
+    if (questionnaireId) params.push('questionnaire=' + questionnaireId);
+    if (patientId) params.push('patient=' + patientId);
+    if (dateFrom) params.push('date_from=' + dateFrom);
+    if (dateTo) params.push('date_to=' + dateTo);
 
-    // Open download URL in new window/tab
     window.open(url + params.join('&'), '_blank');
   }
 
-  // Auto-filter on change
+  // Auto-filter
   document.getElementById('questionnaireFilter').addEventListener('change', filterResponses);
   document.getElementById('patientFilter').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      filterResponses();
-    }
+    if (e.key === 'Enter') filterResponses();
   });
   document.getElementById('dateFromFilter').addEventListener('change', filterResponses);
   document.getElementById('dateToFilter').addEventListener('change', filterResponses);
+
+  // --- Modal JS ---
+  let currentEditResponseId = null;
+
+  async function openEditModal(responseId, questionnaireTitle) {
+    currentEditResponseId = responseId;
+    const modal = document.getElementById('editResponseModal');
+    const form = document.getElementById('editResponseForm');
+    const alertEl = document.getElementById('editModalAlert');
+    
+    document.getElementById('modalQuestionnaireTitle').innerText = questionnaireTitle || 'Evaluation';
+    alertEl.classList.add('hidden');
+    form.innerHTML = `<div id="modalLoading" class="text-center py-16">
+            <div class="inline-block animate-spin h-10 w-10 border-4 border-teal-600 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure data...</p>
+          </div>`;
+    
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+
+    try {
+      const resp = await fetch(`/questionnaires/responses/${responseId}/edit-form/`);
+      if (resp.ok) {
+        const html = await resp.text();
+        
+        // Use Range API for script execution
+        const range = document.createRange();
+        range.selectNode(form);
+        const fragment = range.createContextualFragment(html);
+        
+        form.innerHTML = '';
+        form.appendChild(fragment);
+
+        // Re-initialize visibility if the function exists
+        if (window.initializeEditFormVisibility) {
+            setTimeout(window.initializeEditFormVisibility, 50);
+        }
+      } else {
+        throw new Error('Failed to load form');
+      }
+    } catch (e) {
+      form.innerHTML = `<p class="text-red-500 p-12 text-center font-bold">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Error loading secure data. Please try again.
+        </p>`;
+    }
+  }
+
+  function closeEditModal() {
+    document.getElementById('editResponseModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  async function saveEditResponse(btn) {
+    if (!currentEditResponseId) return;
+
+    const form = document.getElementById('editResponseForm');
+    const alertEl = document.getElementById('editModalAlert');
+    const answers = {};
+
+    const elements = form.querySelectorAll('input[name], textarea[name], select[name]');
+    const seen = new Set();
+    elements.forEach(el => {
+      if (!el.name || el.name === 'csrfmiddlewaretoken') return;
+      const qId = el.name.replace('q_', '');
+      if (el.type === 'radio') {
+        if (el.checked) {
+          answers[qId] = el.value;
+          seen.add(qId);
+        } else if (!seen.has(qId)) {
+          answers[qId] = null;
+        }
+      } else if (el.type === 'checkbox') {
+        if (!answers[qId]) answers[qId] = [];
+        if (el.checked) {
+          answers[qId].push(el.value);
+        }
+      } else {
+        answers[qId] = el.value;
+      }
+    });
+
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+
+    try {
+      const resp = await fetch(`/questionnaires/responses/${currentEditResponseId}/api-update/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ answers })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `
+          <div class="px-4 py-3 bg-green-50 border border-green-200 text-green-800 rounded-lg flex items-center">
+            <i class="fas fa-check-circle mr-3 text-green-500"></i>
+            <span class="font-medium">${data.message}</span>
+          </div>
+        `;
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `
+          <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg flex items-center">
+            <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+            <span class="font-medium">${data.message}</span>
+          </div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    } catch (e) {
+      alertEl.classList.remove('hidden');
+      alertEl.innerHTML = `
+        <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg flex items-center">
+          <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+          <span class="font-medium">An error occurred while saving. Please try again.</span>
+        </div>
+      `;
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 </script>
 {% endblock %}

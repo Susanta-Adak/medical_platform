@@ -2,340 +2,442 @@
 
 {% block title %}Response Details{% endblock %}
 
+{% block extra_css %}
+<!-- Include Tailwind for this page specifically to match Admin's premium look -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Reset some bootstrap baggage that might conflict */
+  .card { box-shadow: none !important; }
+  .btn { border-radius: 0.5rem; }
+  .bg-medical-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  }
+  /* Do not hide modal-backdrop anymore, Bootstrap needs it */
+</style>
+{% endblock %}
+
+{% block page_title %}
+<span class="text-2xl font-bold text-gray-800">
+  <i class="fas fa-file-medical-alt mr-2 text-emerald-600"></i>Response Details
+</span>
+{% endblock %}
+
+{% block page_actions %}
+<div class="flex space-x-2">
+  <a href="{% url 'questionnaires:response_list' %}"
+    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 flex items-center transition no-underline">
+    <i class="fas fa-arrow-left mr-2 text-sm"></i> Back to List
+  </a>
+  <button onclick="openEditModal()"
+    class="px-4 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 flex items-center transition shadow-sm font-medium">
+    <i class="fas fa-edit mr-2 text-sm"></i> Edit Response
+  </button>
+</div>
+{% endblock %}
+
 {% block breadcrumb_items %}
-<li class="breadcrumb-item"><a href="{% url 'questionnaires:response_list' %}">Responses</a></li>
-<li class="breadcrumb-item active">Response details</li>
+<li class="breadcrumb-item"><a href="{% url 'questionnaires:response_list' %}" class="no-underline">Responses</a></li>
+<li class="breadcrumb-item active">Details</li>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-file-medical-alt me-2"></i>Response Details
-                        </h5>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <div class="btn-group">
-                            <a href="{% url 'questionnaires:response_list' %}" class="btn btn-outline-light">
-                                <i class="fas fa-arrow-left"></i> Back to List
-                            </a>
-                            <a href="{% url 'questionnaires:response_edit' response.pk %}" class="btn btn-light ms-2">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                        </div>
-                    </div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+  <div class="p-6 md:p-8">
+
+    <!-- Info Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+
+      <!-- Response Information -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100 uppercase tracking-tight">
+          <i class="fas fa-info-circle mr-2 text-emerald-500 text-sm"></i>Response Info
+        </h2>
+        <div class="space-y-4">
+          <div class="flex items-center">
+            <span class="w-1/3 text-gray-500 text-sm font-medium">Questionnaire:</span>
+            <span class="w-2/3 font-bold text-gray-900">{{ response.questionnaire.title }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="w-1/3 text-gray-500 text-sm font-medium">Status:</span>
+            <span class="w-2/3">
+              {% if response.is_complete %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200">
+                Complete
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 ring-1 ring-amber-200">
+                In Progress
+              </span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="flex items-center text-sm">
+            <span class="w-1/3 text-gray-500 font-medium">Started:</span>
+            <span class="w-2/3 text-gray-700 font-medium">{{ response.started_at|date:"M d, Y H:i" }}</span>
+          </div>
+          <div class="flex items-center text-sm">
+            <span class="w-1/3 text-gray-500 font-medium">Operator:</span>
+            <span class="w-2/3 text-gray-700">
+              <span class="font-bold text-gray-800">
+                {% if response.respondent %}
+                  {{ response.respondent.get_full_name|default:response.respondent.username }}
+                {% else %}
+                  System
+                {% endif %}
+              </span>
+              <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
+                Operator
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient Information -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100 uppercase tracking-tight">
+          <i class="fas fa-user mr-2 text-blue-500 text-sm"></i>Patient Info
+        </h2>
+        {% if response.patient %}
+        <div class="flex items-center mb-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <div class="h-12 w-12 rounded-full bg-white border border-gray-200 flex items-center justify-center mr-4 shadow-sm">
+            <i class="fas fa-user text-xl text-gray-400"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-900 leading-tight">
+              {{ response.patient.first_name }} {{ response.patient.last_name }}
+            </h3>
+            <span class="inline-flex mt-1 items-center px-2 py-0.5 rounded bg-emerald-600 text-[10px] font-black text-white uppercase tracking-wider">
+              {{ response.patient.patient_id }}
+            </span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 px-1">
+          <div>
+            <span class="block text-xs text-gray-400 font-bold uppercase mb-1">Birth Details</span>
+            <span class="text-sm text-gray-800 font-semibold">{{ response.patient.date_of_birth|date:"M d, Y" }}</span>
+            <span class="text-xs text-gray-500">({{ response.patient.age }} yrs)</span>
+          </div>
+          <div>
+            <span class="block text-xs text-gray-400 font-bold uppercase mb-1">Gender</span>
+            <span class="text-sm text-gray-800 font-semibold">{{ response.patient.get_gender_display }}</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="bg-amber-50 text-amber-800 p-4 rounded-lg flex items-center border border-amber-100 italic text-sm">
+          <i class="fas fa-exclamation-triangle mr-3 text-amber-400"></i>
+          No patient associated with this response.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Vital Signs -->
+    <div class="mb-10">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center pb-2 border-b border-gray-100 uppercase tracking-tight">
+        <i class="fas fa-heartbeat mr-2 text-red-500 text-sm"></i>Clinical Observations
+      </h2>
+      {% if vitals %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- BP -->
+        <div class="bg-red-50/50 border border-red-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-red-700 uppercase mb-1">BP</span>
+            <strong class="text-lg text-gray-900">
+                {% if vitals.blood_pressure_systolic %}{{ vitals.blood_pressure_systolic }}/{{ vitals.blood_pressure_diastolic }}{% else %}-{% endif %}
+            </strong>
+            <span class="block text-[10px] text-gray-500 uppercase">mmHg</span>
+        </div>
+        <!-- HR -->
+        <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-emerald-700 uppercase mb-1">HR</span>
+            <strong class="text-lg text-gray-900">{% if vitals.heart_rate %}{{ vitals.heart_rate }}{% else %}-{% endif %}</strong>
+            <span class="block text-[10px] text-gray-500 uppercase">bpm</span>
+        </div>
+        <!-- Temp -->
+        <div class="bg-amber-50/50 border border-amber-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-amber-700 uppercase mb-1">Temp</span>
+            <strong class="text-lg text-gray-900">{% if vitals.temperature %}{{ vitals.temperature }}{% else %}-{% endif %}</strong>
+            <span class="block text-[10px] text-gray-500 uppercase">°F</span>
+        </div>
+        <!-- SpO2 -->
+        <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-blue-700 uppercase mb-1">SpO₂</span>
+            <strong class="text-lg text-gray-900">{% if vitals.spo2 %}{{ vitals.spo2 }}%{% else %}-{% endif %}</strong>
+            <span class="block text-[10px] text-gray-500 uppercase">Oxy</span>
+        </div>
+        <!-- RR -->
+        <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-indigo-700 uppercase mb-1">RR</span>
+            <strong class="text-lg text-gray-900">{% if vitals.respiratory_rate %}{{ vitals.respiratory_rate }}{% else %}-{% endif %}</strong>
+            <span class="block text-[10px] text-gray-500 uppercase">min⁻¹</span>
+        </div>
+        <!-- BMI -->
+        <div class="bg-purple-50/50 border border-purple-100 rounded-xl p-3 text-center">
+            <span class="block text-[10px] font-black text-purple-700 uppercase mb-1">BMI</span>
+            <strong class="text-lg text-gray-900">{% if vitals.bmi %}{{ vitals.bmi }}{% else %}-{% endif %}</strong>
+            <span class="block text-[10px] text-gray-500 uppercase">Index</span>
+        </div>
+      </div>
+      <div class="mt-3 text-right text-[10px] text-gray-400 font-bold uppercase">
+        <i class="fas fa-clock mr-1"></i> Recorded at {{ vitals.recorded_at|date:"M d, Y H:i" }}
+      </div>
+      {% else %}
+      <div class="bg-gray-50 text-gray-500 p-6 rounded-xl border border-dashed border-gray-200 text-center text-sm italic">
+        No clinical observations recorded for this session.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Answers -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mb-6 flex items-center pb-2 border-b border-gray-100 uppercase tracking-tight">
+        <i class="fas fa-list-ol mr-2 text-emerald-500 text-sm"></i>Questionnaire Data
+      </h2>
+
+      {% if response.answers.exists %}
+      <div class="overflow-x-auto border border-gray-100 rounded-xl">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider w-16 text-center">#</th>
+              <th scope="col" class="px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Question Detail</th>
+              <th scope="col" class="px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Type</th>
+              <th scope="col" class="px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Response</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">
+            {% for answer in response.answers.all|dictsort:"question.order" %}
+            <tr class="hover:bg-emerald-50/30 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-center font-mono text-xs text-gray-400">{{ answer.question.get_display_number }}</td>
+              <td class="px-6 py-4">
+                <p class="text-sm font-bold text-gray-800">{{ answer.question.question_text }}</p>
+                {% if answer.question.is_required %}<span class="text-red-500 text-[10px] font-bold uppercase mt-1 block tracking-widest">Mandatory Field</span>{% endif %}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200 uppercase">{{ answer.question.get_question_type_display }}</span>
+              </td>
+              <td class="px-6 py-4">
+                {% if answer.file_answer %}
+                <a href="{{ answer.file_answer.url }}" class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded border border-emerald-100 hover:bg-emerald-100 transition no-underline">
+                  <i class="fas fa-download mr-1.5"></i> Download Record
+                </a>
+                {% elif answer.text_answer %}
+                <div class="text-sm text-gray-700 font-medium italic border-l-2 border-emerald-200 pl-3 py-1">{{ answer.text_answer }}</div>
+                {% elif answer.option_answer.exists %}
+                <div class="flex flex-wrap gap-2">
+                  {% for option in answer.option_answer.all %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-white text-emerald-700 border border-emerald-200 shadow-sm">
+                      {% if option.option_image %}<img src="{{ option.option_image.url }}" class="h-4 w-4 rounded-full mr-1.5">{% endif %}
+                      {{ option.text }}
+                    </span>
+                  {% endfor %}
                 </div>
+                {% else %}
+                <span class="text-gray-300 text-xs italic tracking-wider">NOT RECORDED</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="bg-blue-50/50 border border-blue-100 text-blue-800 p-8 rounded-2xl text-center">
+        <i class="fas fa-info-circle text-4xl mb-3 text-blue-300"></i>
+        <p class="text-lg font-bold">No clinical data recorded yet.</p>
+        <p class="text-sm text-blue-600 mt-1">This response object exists but currently contains no answers.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== Edit Response Modal (Bootstrap Style) ========== -->
+<div class="modal fade" id="editResponseModal" tabindex="-1" aria-labelledby="editResponseModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+            <!-- Header with Gradient Green Theme -->
+            <div class="modal-header bg-medical-gradient border-0 px-6 py-4 flex items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-white opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
+                <h5 class="modal-title font-bold text-white flex items-center relative z-10" id="editResponseModalLabel">
+                    <i class="fas fa-edit mr-3 text-white/80"></i> Edit Clinical Response
+                    <span class="mx-2 opacity-30">|</span>
+                    <span class="font-medium text-emerald-50 text-sm truncate max-w-[200px]">{{ response.questionnaire.title|default:"Evaluation" }}</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white relative z-10" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <!-- Response Information -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5 class="text-muted mb-3"><i class="fas fa-info-circle me-2"></i>Response Information</h5>
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td width="150" class="text-muted text-end">Questionnaire:</td>
-                                <td><strong>{{ response.questionnaire.title }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Type:</td>
-                                <td>{{ response.questionnaire.get_questionnaire_type_display|default:"-" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Status:</td>
-                                <td>
-                                    {% if response.is_complete %}
-                                    <span class="badge bg-success">Complete</span>
-                                    {% else %}
-                                    <span class="badge bg-warning text-dark">In Progress</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Started:</td>
-                                <td>{{ response.started_at|date:"M d, Y H:i" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Submitted:</td>
-                                <td>{{ response.submitted_at|date:"M d, Y H:i"|default:"-" }}</td>
-                            </tr>
-                            {% if response.started_at and response.submitted_at %}
-                            <tr>
-                                <td class="text-muted text-end">Duration:</td>
-                                <td>{{ response.submitted_at|timeuntil:response.started_at }}</td>
-                            </tr>
-                            {% endif %}
-                            <tr>
-                                <td class="text-muted text-end">Operator:</td>
-                                <td>
-                                    {% if response.respondent %}
-                                    {% with r=response.respondent %}
-                                    {% with name=r.get_full_name|default:r.username|default:"Unknown" %}
-                                    {{ name }}
-                                    {% endwith %}
-                                    {% endwith %}
-                                    {% else %}
-                                    <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
 
-                    <div class="col-md-6">
-                        <h5 class="text-muted mb-3"><i class="fas fa-user mb-2"></i>Patient Information</h5>
-                        {% if response.patient %}
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light rounded-circle p-3 me-3 text-center border"
-                                style="width: 60px; height: 60px;">
-                                <i class="fas fa-user fa-lg text-secondary"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">{{ response.patient.first_name }} {{ response.patient.last_name }}</h6>
-                                <span class="badge bg-primary mt-1">{{ response.patient.patient_id }}</span>
-                            </div>
-                        </div>
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td width="120" class="text-muted text-end">DOB:</td>
-                                <td>{{ response.patient.date_of_birth|date:"M d, Y" }} ({{ response.patient.age }} yrs)
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Gender:</td>
-                                <td>{{ response.patient.get_gender_display }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted text-end">Phone:</td>
-                                <td>{{ response.patient.phone_number|default:"-" }}</td>
-                            </tr>
-                        </table>
-                        {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            No patient associated with this response.
-                        </div>
-                        {% endif %}
+            <!-- Body -->
+            <div class="modal-body px-8 py-6 bg-gray-50/50">
+                <div id="editModalAlert" class="hidden mb-6"></div>
+                <form id="editResponseForm" class="space-y-6">
+                    <div id="modalLoading" class="text-center py-16">
+                        <div class="inline-block animate-spin h-10 w-10 border-4 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
+                        <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure clinical data...</p>
                     </div>
-                </div>
+                    <!-- Dynamic fields loaded here -->
+                </form>
+            </div>
 
-                <!-- Vital Signs -->
-                <div class="row mb-5 mt-4">
-                    <div class="col-12">
-                        <h5 class="text-muted mb-3"><i class="fas fa-heartbeat me-2 text-danger"></i>Vital Signs
-                            associated</h5>
-                        {% if vitals %}
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-tachometer-alt text-danger me-3 fa-2x"></i>
-                                            <div>
-                                                <div class="small text-muted">Blood Pressure</div>
-                                                <strong class="fs-5">
-                                                    {% if vitals.blood_pressure_systolic %}
-                                                    {% if vitals.blood_pressure_diastolic %}
-                                                    {{ vitals.blood_pressure_systolic }}
-                                                    /
-                                                    {{ vitals.blood_pressure_diastolic }} mmHg
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-heartbeat text-danger me-3 fa-2x"></i>
-                                            <div>
-                                                <div class="small text-muted">Heart Rate</div>
-                                                <strong class="fs-5">
-                                                    {% if vitals.heart_rate %}
-                                                    {{ vitals.heart_rate }} bpm
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-thermometer-half text-warning me-3 fa-2x"></i>
-                                            <div>
-                                                <div class="small text-muted">Temperature</div>
-                                                <strong class="fs-5">
-                                                    {% if vitals.temperature %}
-                                                    {{ vitals.temperature }} °F
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-wind text-primary me-3 fa-2x"></i>
-                                            <div>
-                                                <div class="small text-muted">SpO₂</div>
-                                                <strong class="fs-5">
-                                                    {% if vitals.spo2 %}{{ vitals.spo2 }}%{% else %}-{% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-lungs text-info me-3 fa-2x"></i>
-                                            <div>
-                                                <div class="small text-muted">Respiratory Rate</div>
-                                                <strong class="fs-5">
-                                                    {% if vitals.respiratory_rate %}{{ vitals.respiratory_rate }}
-                                                    min⁻¹{% else %}-{% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-weight me-3 fa-2x text-secondary"></i>
-                                            <div>
-                                                <div class="small text-muted">Weight / Height / BMI</div>
-                                                <strong class="fs-6">
-                                                    {% if vitals.weight %}{{ vitals.weight }} kg{% else %}-{% endif %} /
-                                                    {% if vitals.height %}{{ vitals.height }} cm{% else %}-{% endif %} /
-                                                    {% if vitals.bmi %}{{ vitals.bmi }}{% else %}-{% endif %}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-end text-muted small mt-2">
-                            {% with v_date=vitals.recorded_at|date:"M d, Y H:i" %}
-                            <i class="fas fa-clock me-1"></i>Vitals recorded at {{ v_date }}
-                            {% endwith %}
-                        </div>
-                        {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            No vitals have been recorded for this patient yet.
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Answers -->
-                <div class="row">
-                    <div class="col-12">
-                        <h5 class="text-muted mb-3"><i class="fas fa-list-ol me-2"></i>Questionnaire Answers</h5>
-                        {% if response.answers.exists %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th width="5%" class="text-center">#</th>
-                                        <th width="45%">Question</th>
-                                        <th width="15%">Type</th>
-                                        <th width="35%">Answer provided</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for answer in response.answers.all|dictsort:"question.order" %}
-                                    <tr>
-                                        <td class="text-center font-monospace">{{ answer.question.get_display_number }}
-                                        </td>
-                                        <td>
-                                            {{ answer.question.question_text }}
-                                            {% if answer.question.is_required %}
-                                            <span class="text-danger ms-1" title="Required">*</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% with qt=answer.question.get_question_type_display %}
-                                            <span class="badge bg-secondary">{{ qt }}</span>
-                                            {% endwith %}
-                                        </td>
-                                        <td class="bg-light">
-                                            {% if answer.file_answer %}
-                                            <div class="d-flex align-items-center">
-                                                <a href="{{ answer.file_answer.url }}"
-                                                    class="btn btn-sm btn-outline-primary" download>
-                                                    <i class="fas fa-download me-1"></i> Download
-                                                </a>
-                                                <span class="ms-2">
-                                                    {{ answer.file_answer.name|truncatechars:18 }}
-                                                </span>
-                                            </div>
-                                            {% elif answer.text_answer %}
-                                            {{ answer.text_answer }}
-                                            {% elif answer.option_answer.exists %}
-                                            {% for option in answer.option_answer.all %}
-                                            {% if option.option_image %}
-                                            <div class="mb-2">
-                                                <img src="{{ option.option_image.url }}" alt="Option Image"
-                                                    class="img-thumbnail" style="max-height: 100px;">
-                                                {% if option.text %}
-                                                <span class="badge bg-info mt-1 d-block">{{ option.text }}</span>
-                                                {% endif %}
-                                            </div>
-                                            {% else %}
-                                            <span class="badge bg-info mt-1">{{ option.text }}</span>
-                                            {% endif %}
-                                            {% endfor %}
-                                            {% else %}
-                                            <span class="text-muted fst-italic">No answer recorded</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center text-muted">No answers found.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            No answers have been recorded for this response yet.
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+            <!-- Footer -->
+            <div class="modal-footer bg-white px-8 py-4 border-t border-gray-100">
+                <button type="button" class="px-6 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-500 bg-white hover:bg-gray-50 transition shadow-sm uppercase tracking-wider" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button id="saveBtn" onclick="saveEditResponse(this)" class="px-8 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-black transition flex items-center shadow-lg hover:shadow-emerald-200/50 uppercase tracking-widest">
+                    <i class="fas fa-check-circle mr-2"></i> Commit Changes
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+  function closeEditModal() {
+    const modalEl = document.getElementById('editResponseModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  }
+
+  async function openEditModal() {
+    const modalEl = document.getElementById('editResponseModal');
+    const form = document.getElementById('editResponseForm');
+    const alertEl = document.getElementById('editModalAlert');
+    
+    alertEl.classList.add('hidden');
+    form.innerHTML = `<div id="modalLoading" class="text-center py-16">
+            <div class="inline-block animate-spin h-10 w-10 border-4 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure data...</p>
+          </div>`;
+    
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    try {
+      const resp = await fetch('{% url "questionnaires:api_get_edit_form" response.pk %}');
+      if (resp.ok) {
+        const html = await resp.text();
+        
+        // Use Range API to ensure scripts in the partial execute
+        const range = document.createRange();
+        range.selectNode(form);
+        const fragment = range.createContextualFragment(html);
+        
+        form.innerHTML = '';
+        form.appendChild(fragment);
+        
+        // Re-initialize visibility if the function exists
+        if (window.initializeEditFormVisibility) {
+            setTimeout(window.initializeEditFormVisibility, 50);
+        }
+      } else {
+        let errorMessage = `Server Error (${resp.status})`;
+        try {
+            const errorData = await resp.json();
+            errorMessage = errorData.message || errorMessage;
+        } catch (je) {
+            // Not JSON, use status text
+            if (resp.statusText) errorMessage += `: ${resp.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+    } catch (e) {
+      form.innerHTML = `<div class="p-8 bg-white border border-red-100 rounded-2xl flex flex-col items-center text-center">
+          <div class="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-shield-alt text-2xl text-red-500"></i>
+          </div>
+          <h4 class="text-gray-900 font-bold mb-1">Authorization Error</h4>
+          <p class="text-sm text-gray-500 max-w-xs mb-6">${e.message || 'You do not have permission to modify this secure health record.'}</p>
+          <button onclick="closeEditModal()" class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-bold uppercase tracking-widest transition">
+            Dismiss
+          </button>
+        </div>`;
+    }
+  }
+
+  async function saveEditResponse(btn) {
+    const form = document.getElementById('editResponseForm');
+    const alertEl = document.getElementById('editModalAlert');
+    const answers = {};
+
+    // Collect all named inputs/selects/textareas
+    const elements = form.querySelectorAll('input[name], textarea[name], select[name]');
+    const seen = new Set();
+
+    elements.forEach(el => {
+      if (!el.name || el.name === 'csrfmiddlewaretoken') return;
+      const qId = el.name.replace('q_', '');
+
+      if (el.type === 'radio') {
+        if (el.checked) {
+          answers[qId] = el.value;
+          seen.add(qId);
+        } else if (!seen.has(qId)) {
+          answers[qId] = null;
+        }
+      } else if (el.type === 'checkbox') {
+        if (!answers[qId]) answers[qId] = [];
+        if (el.checked) {
+          answers[qId].push(el.value);
+        }
+      } else {
+        answers[qId] = el.value;
+      }
+    });
+
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+        alert('Security token missing. Please refresh.');
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+
+    try {
+      const resp = await fetch('{% url "questionnaires:api_update_response" response.pk %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ answers })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `
+          <div class="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center shadow-sm">
+            <i class="fas fa-check-circle mr-3 text-emerald-500"></i>
+            <span class="font-bold text-sm uppercase tracking-wide tracking-tight">${data.message}</span>
+          </div>
+        `;
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `
+          <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center shadow-sm">
+            <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+            <span class="font-bold text-sm">${data.message}</span>
+          </div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    } catch (e) {
+      alertEl.classList.remove('hidden');
+      alertEl.innerHTML = `
+        <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center shadow-sm">
+          <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+          <span class="font-bold text-sm italic">Failed to securely update response. Check connection.</span>
+        </div>
+      `;
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+</script>
 {% endblock %}

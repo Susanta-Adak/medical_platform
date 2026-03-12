@@ -10,8 +10,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from collections import defaultdict
 import csv
 import io
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 from datetime import datetime
 
 from .models import Questionnaire, Question, QuestionOption, Response, Answer
@@ -340,65 +344,49 @@ class ResponseDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         messages.success(request, 'Response deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
-@login_required
-def response_edit(request, pk):
-    response_obj = get_object_or_404(Response, pk=pk)
-    
-    from accounts.models import User
-    if not (request.user.is_staff or request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR] or request.user == response_obj.respondent):
-        from django.http import HttpResponseForbidden
-        return HttpResponseForbidden()
-    
-    questionnaire = response_obj.questionnaire
-    
-    if request.method == 'POST':
-        form = ResponseForm(questionnaire, request.POST, request.FILES, instance=response_obj)
-        if form.is_valid():
-            response = form.save()
-            # save_answers handles update and create
-            form.save_answers(response)
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Response updated successfully!',
-                    'response_id': response.pk
-                })
-            else:
-                messages.success(request, 'Response updated successfully.')
-                return redirect('questionnaires:response_detail', pk=response.pk)
-        else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Please correct the errors below.',
-                    'errors': form.errors
-                })
-    else:
-        form = ResponseForm(questionnaire, instance=response_obj)
-    
-    # Use appropriate template based on questionnaire type
-    if questionnaire.title.lower() == 'patient registration' or 'patient' in questionnaire.title.lower():
-        template = 'questionnaires/patient_profile_form.html'
-    elif questionnaire.title.lower() == 'medical screening questionnaire' or 'medical screening' in questionnaire.title.lower():
-        template = 'questionnaires/simple_screening_form.html'
-    else:
-        template = 'questionnaires/simple_questionnaire_display.html'
-    
-    return render(request, template, {
-        'questionnaire': questionnaire,
-        'questions': questionnaire.questions.all().order_by('order'),
-        'form': form,
-        'is_edit': True,
-        'response_obj': response_obj
-    })
-
 
 @login_required
-def response_edit_redirect(request, pk):
-    """The standalone edit page is removed — redirect to 404."""
-    from django.http import Http404
-    raise Http404("The edit page no longer exists. Use the inline edit modal on the response detail page.")
+def get_response_edit_form(request, pk):
+    """Returns a partial HTML form for editing a response with permission check."""
+    try:
+        from accounts.models import User
+        response_obj = get_object_or_404(Response, pk=pk)
+
+        # Permission check: Staff, Doctors, and Health Assistants can edit. Others can only edit their own.
+        has_permission = (
+            request.user.is_staff or 
+            request.user.role in [User.Role.HEALTH_ASSISTANT, User.Role.DOCTOR] or
+            request.user == response_obj.respondent
+        )
+        
+        if not has_permission:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Permission Denied: You do not have authority to edit this record.'
+            }, status=403)
+
+        # Get all questions in the questionnaire, not just the answered ones
+        questions = response_obj.questionnaire.questions.all().order_by('order', 'id')
+        # Create a map of question_id to answer for easier lookup
+        answers_map = {a.question_id: a for a in response_obj.answers.all()}
+        
+        # Bundle question and answer together for easy template iteration
+        bundled_data = []
+        for q in questions:
+            bundled_data.append({
+                'question': q,
+                'answer': answers_map.get(q.id)
+            })
+        
+        return render(request, 'questionnaires/partials/response_edit_form.html', {
+            'response': response_obj,
+            'bundled_data': bundled_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'Server Error: {str(e)}'
+        }, status=500)
 
 
 @login_required
@@ -408,7 +396,7 @@ def api_update_response(request, pk):
     import json
     response_obj = get_object_or_404(Response, pk=pk)
 
-    if not (request.user.is_staff or request.user.role in ['health_assistant', 'doctor']):
+    if not (request.user.is_staff or request.user.role in ['HEALTH_ASSISTANT', 'DOCTOR']):
         return JsonResponse({'success': False, 'message': 'Access denied'}, status=403)
 
     try:
@@ -425,14 +413,27 @@ def api_update_response(request, pk):
                 if q_type in ('short_answer', 'long_answer', 'yes_no', 'true_false', 'number'):
                     answer.text_answer = str(value) if value is not None else ''
                     answer.option_answer.clear()
-                elif q_type == 'multiple_choice':
+                elif q_type in ('multiple_choice', 'image_choice'):
                     answer.text_answer = ''
                     answer.option_answer.clear()
-                    if value:
-                        # value may be a single id or list
-                        ids = value if isinstance(value, list) else [value]
-                        options = QuestionOption.objects.filter(pk__in=ids)
-                        answer.option_answer.set(options)
+                    if value is not None:
+                        # Convert all values to integers safely
+                        ids = []
+                        if isinstance(value, list):
+                            for v in value:
+                                try:
+                                    if v: ids.append(int(v))
+                                except (ValueError, TypeError):
+                                    continue
+                        else:
+                            try:
+                                if value: ids.append(int(value))
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        if ids:
+                            options = QuestionOption.objects.filter(pk__in=ids)
+                            answer.option_answer.set(options)
                 elif q_type == 'date':
                     answer.text_answer = str(value) if value else ''
                 answer.save()

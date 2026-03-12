@@ -2,223 +2,213 @@
 
 {% block title %}Questionnaire Responses{% endblock %}
 
+{% block extra_css %}
+<!-- Include Tailwind for this page specifically to match Admin's premium look -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Reset some bootstrap baggage that might conflict */
+  .card { box-shadow: none !important; }
+  .btn { border-radius: 0.5rem; }
+  .bg-medical-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  }
+  .modal-backdrop { display: none !important; } /* We'll use our own backdrop */
+  .responsive-table th { @apply px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider; }
+  .responsive-table td { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700; }
+</style>
+{% endblock %}
+
+{% block page_title %}
+<span class="text-2xl font-bold text-gray-800">
+  <i class="fas fa-file-medical-alt mr-2 text-emerald-600"></i>Survey Submissions
+</span>
+{% endblock %}
+
+{% block page_actions %}
+<div class="flex space-x-2">
+  <button onclick="downloadResponses()" class="px-4 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 flex items-center transition shadow-sm font-medium">
+    <i class="fas fa-download mr-2 text-sm"></i> Intelligence Export
+  </button>
+</div>
+{% endblock %}
+
 {% block breadcrumb_items %}
 <li class="breadcrumb-item active">Responses</li>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-file-medical-alt me-2"></i>Questionnaire Responses
-                        </h5>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <button onclick="downloadResponses()" class="btn btn-primary">
-                            <i class="fas fa-download me-2"></i>Download Responses
-                        </button>
-                    </div>
+<div class="space-y-6">
+  <!-- Search and Filter -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="md:col-span-2">
+        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Questionnaire Type</label>
+        <select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none" id="questionnaireFilter">
+          <option value="">All Active Surveys</option>
+          {% for questionnaire in questionnaires %}
+          {% with q_id=questionnaire.id|stringformat:"s" %}
+          <option value="{{ questionnaire.id }}" {% if request.GET.questionnaire == q_id %}selected{% endif %}>
+            {{ questionnaire.title }}
+          </option>
+          {% endwith %}
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Patient Identity</label>
+        <input type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 transition-all outline-none" id="patientFilter" placeholder="SCL-ID / Name..." value="{{ request.GET.patient }}">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Date Range Window</label>
+        <div class="flex items-center space-x-2">
+          <input type="date" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 transition-all outline-none" id="dateFromFilter" value="{{ request.GET.date_from }}">
+          <span class="text-gray-300 font-bold">→</span>
+          <input type="date" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 transition-all outline-none" id="dateToFilter" value="{{ request.GET.date_to }}">
+          <button class="bg-gray-800 hover:bg-black text-white p-2.5 rounded-xl transition-all shadow-md ml-2" onclick="filterResponses()">
+            <i class="fas fa-search px-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Responses List -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    {% if responses %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead class="bg-gray-50/50">
+          <tr>
+            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Patient</th>
+            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Survey Detail</th>
+            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Protocol</th>
+            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Timestamp</th>
+            <th class="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50 bg-white">
+          {% for response in responses %}
+          <tr class="hover:bg-emerald-50/20 transition-all group">
+            <td class="px-6 py-4">
+              <div class="flex items-center">
+                <div class="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-xs mr-3 border border-emerald-200 group-hover:scale-110 transition-transform">
+                  {{ response.patient.first_name|slice:":1"|default:"?" }}{{ response.patient.last_name|slice:":1"|default:"" }}
                 </div>
+                <div>
+                  <p class="text-sm font-bold text-gray-900 leading-tight">{{ response.patient.first_name }} {{ response.patient.last_name }}</p>
+                  <p class="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">{{ response.patient.patient_id|default:"ANONYMOUS" }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <p class="text-sm font-bold text-gray-800 truncate max-w-[200px]">{{ response.questionnaire.title|default:"Evaluation"|default:"Clinical Record" }}</p>
+              <p class="text-[10px] text-gray-400 font-semibold italic">{{ response.questionnaire.get_questionnaire_type_display|default:"Screening" }}</p>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <span class="px-2 py-0.5 rounded text-[9px] font-black bg-gray-100 text-gray-500 uppercase border border-gray-200">
+                {{ response.respondent.get_role_display|default:"SYSTEM" }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              {% if response.is_complete %}
+              <div class="flex items-center text-emerald-600">
+                <div class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest">Completed</span>
+              </div>
+              {% else %}
+              <div class="flex items-center text-amber-500">
+                <div class="h-1.5 w-1.5 rounded-full bg-amber-500 mr-2 animate-pulse"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-amber-600">Partial</span>
+              </div>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <p class="text-[11px] font-bold text-gray-600">{{ response.submitted_at|date:"M d, Y"|default:response.started_at|date:"M d, Y" }}</p>
+              <p class="text-[10px] text-gray-400">{{ response.submitted_at|date:"H:i A"|default:response.started_at|date:"H:i A" }}</p>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex justify-end space-x-2">
+                <a href="{% url 'questionnaires:response_detail' response.pk %}" class="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-600 hover:text-white transition-all shadow-sm group-hover:shadow-emerald-100" title="View Full Analysis">
+                  <i class="fas fa-eye text-xs"></i>
+                </a>
+                <button onclick="openEditModal({{ response.pk }}, '{{ response.questionnaire.title|escapejs }}')" class="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-600 hover:text-white transition-all shadow-sm group-hover:shadow-emerald-100" title="Modify Record">
+                  <i class="fas fa-edit text-xs"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+      <p class="text-[10px] font-bold text-gray-400 uppercase">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+      <div class="flex space-x-1">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.questionnaire %}&questionnaire={{ request.GET.questionnaire }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}" class="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:border-emerald-500 transition-all no-underline">Prev</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.questionnaire %}&questionnaire={{ request.GET.questionnaire }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}" class="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:border-emerald-500 transition-all no-underline">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-20 bg-gray-50/30">
+      <div class="h-20 w-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 border-dashed">
+        <i class="fas fa-inbox text-3xl text-gray-300"></i>
+      </div>
+      <h3 class="text-lg font-black text-gray-400 uppercase tracking-widest">No Submissions Found</h3>
+      <p class="text-sm text-gray-500 mt-1 italic">Try adjusting filters or starting a new screening.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ========== Edit Response Modal (Bootstrap Style) ========== -->
+<div class="modal fade" id="editResponseModal" tabindex="-1" aria-labelledby="editResponseModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-2xl rounded-2xl overflow-hidden">
+            <!-- Header with Gradient Green Theme -->
+            <div class="modal-header bg-medical-gradient border-0 px-6 py-4 flex items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-white opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
+                <h5 class="modal-title font-bold text-white flex items-center relative z-10" id="editResponseModalLabel">
+                    <i class="fas fa-edit mr-3 text-white/80"></i> Modify Record
+                    <span class="mx-2 opacity-30">|</span>
+                    <span id="modalQuestionnaireTitle" class="font-medium text-emerald-50 text-sm truncate max-w-[200px]">Survey</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white relative z-10" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <!-- Filters -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label for="questionnaireFilter" class="form-label">Questionnaire</label>
-                                        <select class="form-select" id="questionnaireFilter">
-                                            <option value="">All Questionnaires</option>
-                                            {% for questionnaire in questionnaires %}
-                                            {% with q_id=questionnaire.id|stringformat:"s" %}
-                                            {% if request.GET.questionnaire == q_id %}
-                                            <option value="{{ questionnaire.id }}" selected>
-                                                {{ questionnaire.title }}
-                                            </option>
-                                            {% else %}
-                                            <option value="{{ questionnaire.id }}">
-                                                {{ questionnaire.title }}
-                                            </option>
-                                            {% endif %}
-                                            {% endwith %}
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="patientFilter" class="form-label">Patient ID</label>
-                                        <input type="text" class="form-control" id="patientFilter"
-                                            placeholder="Filter by Patient ID..." value="{{ request.GET.patient }}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label for="dateFromFilter" class="form-label">From Date</label>
-                                        <input type="date" class="form-control" id="dateFromFilter"
-                                            value="{{ request.GET.date_from }}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label for="dateToFilter" class="form-label">To Date</label>
-                                        <input type="date" class="form-control" id="dateToFilter"
-                                            value="{{ request.GET.date_to }}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">&nbsp;</label>
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-primary w-100" onclick="filterResponses()">
-                                                <i class="fas fa-search me-1"></i>Search
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+            <!-- Body -->
+            <div class="modal-body px-8 py-6 bg-gray-50/50">
+                <div id="editModalAlert" class="hidden mb-6"></div>
+                <form id="editResponseForm" class="space-y-6">
+                    <div id="modalLoading" class="text-center py-16">
+                        <div class="inline-block animate-spin h-10 w-10 border-4 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
+                        <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure clinical data...</p>
                     </div>
-                </div>
+                </form>
+            </div>
 
-                <!-- Responses Table -->
-                {% if responses %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Patient ID</th>
-                                <th>Patient Name</th>
-                                <th>Questionnaire</th>
-                                <th>Operator</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for response in responses %}
-                            <tr>
-                                <td>
-                                    {% if response.patient %}
-                                    <strong>{{ response.patient.patient_id }}</strong>
-                                    {% else %}
-                                    <span class="text-muted">No Patient</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if response.patient %}
-                                    {{ response.patient.first_name }} {{ response.patient.last_name }}
-                                    {% else %}
-                                    <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <strong>{{ response.questionnaire.title }}</strong>
-                                    {% if response.questionnaire.questionnaire_type %}
-                                    {% with q_type=response.questionnaire.get_questionnaire_type_display %}
-                                    <br><small class="text-muted">{{ q_type }}</small>
-                                    {% endwith %}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if response.respondent %}
-                                    {% with r=response.respondent %}
-                                    {% with name=r.get_full_name|default:r.username|default:"Unknown" %}
-                                    {{ name }}
-                                    {% endwith %}
-                                    {% endwith %}
-                                    {% else %}
-                                    <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if response.is_complete %}
-                                    <span class="badge bg-success">Complete</span>
-                                    {% else %}
-                                    <span class="badge bg-warning text-dark">In Progress</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if response.submitted_at %}
-                                    {{ response.submitted_at|date:"Y-m-d H:i" }}
-                                    {% else %}
-                                    {{ response.started_at|date:"Y-m-d H:i" }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'questionnaires:response_detail' response.pk %}"
-                                            class="btn btn-outline-primary" title="View">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                        <a href="{% url 'questionnaires:response_edit' response.pk %}"
-                                            class="btn btn-outline-secondary" title="Edit">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                {% if is_paginated %}
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link"
-                                href="?page={{ page_obj.previous_page_number }}{% if request.GET.questionnaire %}&questionnaire={{ request.GET.questionnaire }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Previous</a>
-                        </li>
-                        {% endif %}
-
-                        <li class="page-item active">
-                            {% with num_pages=page_obj.paginator.num_pages %}
-                            <span class="page-link">Page {{ page_obj.number }} of {{ num_pages }}</span>
-                            {% endwith %}
-                        </li>
-
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link"
-                                href="?page={{ page_obj.next_page_number }}{% if request.GET.questionnaire %}&questionnaire={{ request.GET.questionnaire }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Next</a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">No responses found</h5>
-                    <p class="text-muted">
-                        {% if request.GET.questionnaire %}
-                        Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}">clear all
-                            filters</a>.
-                        {% elif request.GET.patient %}
-                        Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}">clear all
-                            filters</a>.
-                        {% elif request.GET.date_from %}
-                        Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}">clear all
-                            filters</a>.
-                        {% elif request.GET.date_to %}
-                        Try adjusting your filters or <a href="{% url 'questionnaires:response_list' %}">clear all
-                            filters</a>.
-                        {% else %}
-                        No questionnaire responses have been submitted yet.
-                        {% endif %}
-                    </p>
-                </div>
-                {% endif %}
+            <!-- Footer -->
+            <div class="modal-footer bg-white px-8 py-4 border-t border-gray-100">
+                <button type="button" class="px-6 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-500 bg-white hover:bg-gray-50 transition shadow-sm uppercase tracking-wider" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button id="saveBtn" onclick="saveEditResponse(this)" class="px-8 font-black py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs flex items-center shadow-lg hover:shadow-emerald-200/50 uppercase tracking-widest">
+                    <i class="fas fa-check-circle mr-2"></i> Commit Changes
+                </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
     function filterResponses() {
         const questionnaireId = document.getElementById('questionnaireFilter').value;
@@ -251,14 +241,144 @@
         if (dateFrom) params.push('date_from=' + encodeURIComponent(dateFrom));
         if (dateTo) params.push('date_to=' + encodeURIComponent(dateTo));
 
-        // Open download URL in new window/tab
         window.open(url + params.join('&'), '_blank');
     }
 
     // Auto-filter on change
     document.getElementById('questionnaireFilter').addEventListener('change', filterResponses);
-    document.getElementById('patientFilter').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') filterResponses();
-    });
+
+    let currentEditResponseId = null;
+
+    async function openEditModal(responseId, questionnaireTitle) {
+        currentEditResponseId = responseId;
+        const modalEl = document.getElementById('editResponseModal');
+        const form = document.getElementById('editResponseForm');
+        const alertEl = document.getElementById('editModalAlert');
+        
+        document.getElementById('modalQuestionnaireTitle').innerText = questionnaireTitle || 'Clinical Record';
+        alertEl.classList.add('hidden');
+        form.innerHTML = `<div id="modalLoading" class="text-center py-16">
+            <div class="inline-block animate-spin h-10 w-10 border-4 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Retrieving secure data...</p>
+          </div>`;
+        
+        // Use Bootstrap Modal API
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        try {
+            const resp = await fetch(`/questionnaires/responses/${responseId}/edit-form/`);
+            if (resp.ok) {
+                const html = await resp.text();
+                
+                // Use Range API for script execution (the "correct logic")
+                const range = document.createRange();
+                range.selectNode(form);
+                const fragment = range.createContextualFragment(html);
+                
+                form.innerHTML = '';
+                form.appendChild(fragment);
+
+                // Re-initialize visibility if the function exists
+                if (window.initializeEditFormVisibility) {
+                    setTimeout(window.initializeEditFormVisibility, 50);
+                }
+            } else {
+                const errorData = await resp.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to authorize access.');
+            }
+        } catch (e) {
+            form.innerHTML = `<div class="p-6 bg-red-50 border border-red-100 rounded-2xl flex items-center text-red-800">
+                <i class="fas fa-exclamation-circle text-2xl mr-4 text-red-500"></i>
+                <div>
+                    <p class="font-bold text-sm">Access Denied / Error</p>
+                    <p class="text-xs opacity-80">${e.message || 'Error loading response data.'}</p>
+                </div>
+            </div>`;
+        }
+    }
+
+    function closeEditModal() {
+        const modalEl = document.getElementById('editResponseModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+
+    async function saveEditResponse(btn) {
+        if (!currentEditResponseId) return;
+
+        const form = document.getElementById('editResponseForm');
+        const alertEl = document.getElementById('editModalAlert');
+        const answers = {};
+
+        const elements = form.querySelectorAll('input[name], textarea[name], select[name]');
+        const seen = new Set();
+        elements.forEach(el => {
+            if (!el.name || el.name === 'csrfmiddlewaretoken') return;
+            const qId = el.name.replace('q_', '');
+            if (el.type === 'radio') {
+                if (el.checked) {
+                    answers[qId] = el.value;
+                    seen.add(qId);
+                } else if (!seen.has(qId)) {
+                    answers[qId] = null;
+                }
+            } else if (el.type === 'checkbox') {
+                if (!answers[qId]) answers[qId] = [];
+                if (el.checked) {
+                    answers[qId].push(el.value);
+                }
+            } else {
+                answers[qId] = el.value;
+            }
+        });
+
+        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (!csrfToken) return;
+
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+
+        try {
+            const resp = await fetch(`/questionnaires/responses/${currentEditResponseId}/api-update/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ answers })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                alertEl.classList.remove('hidden');
+                alertEl.innerHTML = `
+                    <div class="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center shadow-sm">
+                        <i class="fas fa-check-circle mr-3 text-emerald-500"></i>
+                        <span class="font-bold text-sm uppercase tracking-tight">${data.message}</span>
+                    </div>
+                `;
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alertEl.classList.remove('hidden');
+                alertEl.innerHTML = `
+                    <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center shadow-sm">
+                        <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+                        <span class="font-bold text-sm">${data.message}</span>
+                    </div>
+                `;
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } catch (e) {
+            alertEl.classList.remove('hidden');
+            alertEl.innerHTML = `
+                <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center shadow-sm">
+                    <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+                    <span class="font-bold text-sm italic">Failed to securely update response.</span>
+                </div>
+            `;
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
 </script>
 {% endblock %}
