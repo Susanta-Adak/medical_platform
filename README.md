@@ -2,7 +2,7 @@
 
 A professional-grade healthcare platform designed for secure medical data collection, patient management, and IoT device integration.
 
-## 🚀 Core Features
+##  Core Features
 
 - **Health Assistant Portal**: Streamlined interface for clinicians to manage patient registrations and screening sessions.
 - **Dynamic Questionnaire Builder**: Advanced tool for admins to create hierarchical, branching clinical surveys with version control.
@@ -10,7 +10,7 @@ A professional-grade healthcare platform designed for secure medical data collec
 - **Admin Dashboard**: Comprehensive analytics and submission tracking for medical operators.
 - **Responsive Management**: Accessible across desktop, tablet, and mobile devices.
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 - **Backend**: Django 4.2+ (Python 3.9+)
 - **Database**: PostgreSQL (Production) / SQLite (Development)
@@ -18,7 +18,7 @@ A professional-grade healthcare platform designed for secure medical data collec
 - **Infrastructure**: Gunicorn, Nginx, AWS S3 (for medical scans)
 - **Real-time**: MQTT Gateway for device status synchronization
 
-## 📦 Installation & Setup
+##  Installation & Setup
 
 ### 1. Prerequisites
 - Python 3.9+
