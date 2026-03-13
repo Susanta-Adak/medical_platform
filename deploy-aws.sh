@@ -62,7 +62,7 @@ echo "🌐 Setting up Nginx..."
 sudo tee /etc/nginx/sites-available/medical_platform << 'EOF'
 server {
     listen 80;
-    server_name 13.204.125.52 your-domain.com www.your-domain.com;
+    server_name your-server-ip your-domain.com www.your-domain.com;
 
     location /static/ {
         alias /var/www/medical_platform/staticfiles/;
@@ -120,9 +120,9 @@ sudo chown -R www-data:www-data /var/www/medical_platform
 sudo chmod -R 755 /var/www/medical_platform
 
 echo "✅ Deployment complete!"
-echo "🌐 Your application should be available at: http://13.204.125.52"
+echo "🌐 Your application should be available at: http://your-server-ip"
 echo "🔧 Don't forget to:"
 echo "   1. Update .env with your actual domain and passwords"
-echo "   2. Configure DNS to point your-domain.com to 13.204.125.52"
+echo "   2. Configure DNS to point your-domain.com to your-server-ip"
 echo "   3. Set up SSL certificate"
 echo "   4. Configure AWS Security Groups to allow HTTP/HTTPS traffic"

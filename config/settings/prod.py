@@ -4,7 +4,7 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['13.204.125.52', 'your-domain.com', 'www.your-domain.com', 'localhost', 'health.sclab.in']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') or ['localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://health.sclab.in',
