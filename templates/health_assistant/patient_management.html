@@ -106,6 +106,13 @@
             <div class="modal-body">
                 <form id="editPatientForm">
                     <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="editSetuId" class="form-label text-indigo-700 fw-bold">
+                                <i class="fas fa-id-card me-1"></i>Setu ID <span class="text-muted fw-normal small">(Optional but important)</span>
+                            </label>
+                            <input type="text" class="form-control border-primary" id="editSetuId">
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             <label for="editFirstName" class="form-label">First Name *</label>
                             <input type="text" class="form-control" id="editFirstName" required>
@@ -193,6 +200,13 @@
                         </div>
                         
                         <div class="row mb-3">
+                            <div class="col-12 mb-3">
+                                <label for="addSetuId" class="form-label text-indigo-700 fw-bold">
+                                    <i class="fas fa-id-card me-1"></i>Setu ID <span class="text-muted fw-normal small">(Optional but important)</span>
+                                </label>
+                                <input type="text" class="form-control border-primary" id="addSetuId" name="setu_id" placeholder="Optional Setu ID">
+                            </div>
+
                             <div class="col-md-6 mb-3">
                                 <label for="addFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="addFirstName" name="first_name" required>
@@ -458,6 +472,7 @@ function displayPatients(patients) {
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
+                    <th>Setu ID</th>
                     <th>Patient ID</th>
                     <th>Name</th>
                     <th>Age</th>
@@ -475,6 +490,9 @@ function displayPatients(patients) {
         const registrationDate = new Date(patient.created_at).toLocaleDateString();
         html += `
             <tr class="patient-card">
+                <td>
+                    ${patient.setu_id ? `<span class="badge bg-info text-dark border">${patient.setu_id}</span>` : '<span class="text-muted small">N/A</span>'}
+                </td>
                 <td><span class="badge bg-primary">${patient.patient_id}</span></td>
                 <td>
                     <div class="d-flex align-items-center">
@@ -564,7 +582,7 @@ function editPatient(patientId) {
     currentPatientId = patientId;
     
     // Fetch patient data
-    fetch(`/health-assistant/api/patients/${patientId}/`, {
+    fetch(`/health-assistant/api/get-patient/${patientId}/`, {
         headers: {
             'X-CSRFToken': getCookie('csrftoken')
         }
@@ -573,6 +591,7 @@ function editPatient(patientId) {
     .then(data => {
         if (data.patient) {
             const patient = data.patient;
+            document.getElementById('editSetuId').value = patient.setu_id || '';
             document.getElementById('editFirstName').value = patient.first_name;
             document.getElementById('editLastName').value = patient.last_name;
             document.getElementById('editDateOfBirth').value = patient.date_of_birth;
@@ -596,6 +615,7 @@ function savePatient() {
     if (!currentPatientId) return;
     
     const formData = {
+        'setu_id': document.getElementById('editSetuId').value,
         'first_name': document.getElementById('editFirstName').value,
         'last_name': document.getElementById('editLastName').value,
         'date_of_birth': document.getElementById('editDateOfBirth').value,
@@ -618,11 +638,22 @@ function savePatient() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('Patient updated successfully!', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('editPatientModal')).hide();
-            searchPatients(currentPage); // Refresh current page
+            // Show success toast/alert
+            if (typeof showToast === 'function') {
+                showToast('Patient updated successfully!');
+            } else {
+                alert('Patient updated successfully!');
+            }
+            
+            // Hide modal
+            const modalEl = document.getElementById('editPatientModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            
+            // Refresh patient list
+            searchPatients(currentPage);
         } else {
-            showAlert(data.message || 'Error updating patient', 'danger');
+            alert(data.error || data.message || 'Error updating patient');
         }
     })
     .catch(error => {

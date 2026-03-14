@@ -146,6 +146,7 @@ def patient_register(request):
                 for p in existing_patients:
                     patient_list.append({
                         'id': p.id,
+                        'setu_id': p.setu_id,
                         'patient_id': p.patient_id,
                         'first_name': p.first_name,
                         'last_name': p.last_name,
@@ -186,6 +187,7 @@ def patient_register(request):
                     'success': True,
                     'patient': {
                         'id': patient.id,
+                        'setu_id': patient.setu_id,
                         'patient_id': patient.patient_id,
                         'first_name': patient.first_name,
                         'last_name': patient.last_name,
@@ -408,6 +410,7 @@ def api_search_patients(request):
                 for patient in existing_patients:
                     patient_data.append({
                         'id': patient.id,
+                        'setu_id': patient.setu_id,
                         'patient_id': patient.patient_id,
                         'first_name': patient.first_name,
                         'last_name': patient.last_name,
@@ -431,8 +434,8 @@ def api_search_patients(request):
                     'message': f'Phone number {query} already exists. Please select existing patient or use different number.'
                 })
         
-        # Regular search by name or partial phone
-        filters |= Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(patient_id__icontains=query) | Q(phone_number__icontains=query)
+        # Regular search by name, partial phone or Setu ID
+        filters |= Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(patient_id__icontains=query) | Q(phone_number__icontains=query) | Q(setu_id__icontains=query)
     
     print(f"DEBUG: Search query: '{query}'")
     print(f"DEBUG: Filters: {filters}")
@@ -463,6 +466,7 @@ def api_search_patients(request):
         print(f"DEBUG: Patient {i}: {patient.first_name} {patient.last_name} (ID: {patient.patient_id})")
         patient_data.append({
             'id': patient.id,
+            'setu_id': patient.setu_id,
             'patient_id': patient.patient_id,
             'first_name': patient.first_name,
             'last_name': patient.last_name,
@@ -504,6 +508,7 @@ def api_get_patient(request, patient_id):
         return JsonResponse({
             'patient': {
                 'id': patient.id,
+                'setu_id': patient.setu_id,
                 'patient_id': patient.patient_id,
                 'first_name': patient.first_name,
                 'last_name': patient.last_name,
@@ -537,20 +542,31 @@ def api_patient_update(request, patient_id):
     try:
         patient = Patient.objects.get(id=patient_id)
         
+        # Handle JSON data if provided
+        if request.content_type == 'application/json':
+            import json
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+
         # Update fields
-        patient.first_name = request.POST.get('first_name', patient.first_name)
-        patient.last_name = request.POST.get('last_name', patient.last_name)
+        patient.setu_id = data.get('setu_id', patient.setu_id)
+        patient.first_name = data.get('first_name', patient.first_name)
+        patient.last_name = data.get('last_name', patient.last_name)
         
-        date_of_birth = request.POST.get('date_of_birth')
+        date_of_birth = data.get('date_of_birth')
         if date_of_birth:
             from datetime import datetime
-            patient.date_of_birth = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+            try:
+                patient.date_of_birth = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                pass
         
-        patient.gender = request.POST.get('gender', patient.gender)
-        patient.phone_number = request.POST.get('phone_number', patient.phone_number)
-        patient.email = request.POST.get('email', patient.email)
-        patient.city = request.POST.get('city', patient.city)
-        patient.address = request.POST.get('address', patient.address)
+        patient.gender = data.get('gender', patient.gender)
+        patient.phone_number = data.get('phone_number', patient.phone_number)
+        patient.email = data.get('email', patient.email)
+        patient.city = data.get('city', patient.city)
+        patient.address = data.get('address', patient.address)
         
         patient.save()
         
@@ -559,6 +575,7 @@ def api_patient_update(request, patient_id):
             'message': 'Patient updated successfully',
             'patient': {
                 'id': patient.id,
+                'setu_id': patient.setu_id,
                 'first_name': patient.first_name,
                 'last_name': patient.last_name,
                 'phone_number': patient.phone_number
@@ -579,7 +596,7 @@ def export_patients_csv(query, gender, date_from, date_to):
     # Build filter conditions
     filters = Q()
     if query:
-        filters |= Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(patient_id__icontains=query) | Q(phone_number__icontains=query)
+        filters |= Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(patient_id__icontains=query) | Q(phone_number__icontains=query) | Q(setu_id__icontains=query)
     if gender:
         filters &= Q(gender=gender)
     if date_from:
@@ -593,10 +610,11 @@ def export_patients_csv(query, gender, date_from, date_to):
     response['Content-Disposition'] = 'attachment; filename="patients_export.csv"'
     
     writer = csv.writer(response)
-    writer.writerow(['Patient ID', 'First Name', 'Last Name', 'Age', 'Gender', 'Phone', 'Email', 'City', 'Address', 'Created'])
+    writer.writerow(['Setu ID', 'Patient ID', 'First Name', 'Last Name', 'Age', 'Gender', 'Phone', 'Email', 'City', 'Address', 'Created'])
     
     for patient in patients:
         writer.writerow([
+            patient.setu_id,
             patient.patient_id,
             patient.first_name,
             patient.last_name,
@@ -805,6 +823,7 @@ def api_submit_questionnaire(request):
             patient=patient,
             respondent=request.user,
             is_complete=True,
+            submitted_at=timezone.now(),
             ip_address=request.META.get('REMOTE_ADDR', ''),
             user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
         )

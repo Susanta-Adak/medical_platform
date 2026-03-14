@@ -45,6 +45,11 @@
                 {% for response in responses %}
                 <tr>
                     <td class="ps-4">
+                        {% if response.patient.setu_id %}
+                        <div class="mb-1">
+                            <span class="badge bg-info text-dark" style="font-size: 0.75rem;">Setu ID: {{ response.patient.setu_id }}</span>
+                        </div>
+                        {% endif %}
                         <div class="fw-semibold">{{ response.patient.full_name }}</div>
                         <small class="badge bg-light text-dark border-0">{{ response.patient.patient_id }}</small>
                     </td>
@@ -53,9 +58,19 @@
                     </td>
                     <td>
                         <div class="small fw-medium">
-                            {{ response.respondent.get_full_name|default:response.respondent.email }}
+                            {% if response.respondent %}
+                                {{ response.respondent.get_full_name|default:response.respondent.email }}
+                            {% else %}
+                                Unknown User
+                            {% endif %}
                         </div>
-                        <div class="text-muted small">Operator</div>
+                        <div class="text-muted small">
+                            {% if response.respondent %}
+                                {{ response.respondent.get_role_display }}
+                            {% else %}
+                                Operator
+                            {% endif %}
+                        </div>
                     </td>
                     <td class="text-muted small">{{ response.submitted_at|date:"M d, Y H:i" }}</td>
                     <td class="text-end pe-4">

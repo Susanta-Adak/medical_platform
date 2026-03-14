@@ -11,10 +11,14 @@ class PatientRegistrationForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = [
-            'first_name', 'last_name', 'date_of_birth', 'gender',
+            'setu_id', 'first_name', 'last_name', 'date_of_birth', 'gender',
             'phone_number', 'email', 'address', 'city', 'state', 'postal_code'
         ]
         widgets = {
+            'setu_id': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Setu ID (optional)'
+            }),
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'First name'

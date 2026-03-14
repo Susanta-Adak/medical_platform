@@ -23,6 +23,18 @@
                             </h6>
                         </div>
 
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.setu_id.id_for_label }}" class="form-label text-indigo-700 fw-bold">
+                                <i class="fas fa-id-card me-1"></i>Setu ID <span class="text-muted fw-normal small">(Optional but important)</span>
+                            </label>
+                            {{ form.setu_id }}
+                            {% if form.setu_id.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.setu_id.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.first_name.id_for_label }}" class="form-label">
                                 First Name <span class="text-danger">*</span>

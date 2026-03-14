@@ -113,6 +113,7 @@
                         <table class="table table-hover" id="patientsTable">
                             <thead class="table-light">
                                 <tr>
+                                    <th>Setu ID</th>
                                     <th>Patient ID</th>
                                     <th>Name</th>
                                     <th>Age</th>
@@ -125,7 +126,7 @@
                             </thead>
                             <tbody id="patientsTableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
@@ -161,6 +162,14 @@
             <div class="modal-body">
                 <form id="editPatientForm">
                     {% csrf_token %}
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="editSetuId" class="form-label text-indigo-700 fw-bold">
+                                <i class="fas fa-id-card me-1"></i>Setu ID <span class="text-muted fw-normal small">(Optional)</span>
+                            </label>
+                            <input type="text" class="form-control border-primary" id="editSetuId" name="setu_id">
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="editFirstName" class="form-label">First Name</label>
@@ -322,7 +331,7 @@
         // Show loading
         document.getElementById('patientsTableBody').innerHTML = `
         <tr>
-            <td colspan="8" class="text-center py-4">
+            <td colspan="9" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -362,7 +371,7 @@
                 console.error('Error loading patients:', error);
                 document.getElementById('patientsTableBody').innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-danger">
+                    <td colspan="9" class="text-center py-4 text-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         Error loading patients: ${error.message}
                     </td>
@@ -379,7 +388,7 @@
         if (patients.length === 0) {
             tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="9" class="text-center py-4">
                     <i class="fas fa-search me-2"></i>
                     No patients found matching your criteria.
                 </td>
@@ -408,6 +417,7 @@
             }
 
             html += '<tr>' +
+                '<td><span class="badge bg-light text-dark border">' + (patient.setu_id || '<span class="text-muted">N/A</span>') + '</span></td>' +
                 '<td><span class="badge bg-secondary">' + (patient.patient_id || 'N/A') + '</span></td>' +
                 '<td>' +
                 '<div class="d-flex align-items-center">' +
@@ -460,6 +470,7 @@
                 }
                 const patient = data.patient;
                 document.getElementById('editPatientId').value = patient.id;
+                document.getElementById('editSetuId').value = patient.setu_id || '';
                 document.getElementById('editFirstName').value = patient.first_name;
                 document.getElementById('editLastName').value = patient.last_name;
                 document.getElementById('editDateOfBirth').value = patient.date_of_birth;

@@ -331,13 +331,11 @@
                         {% if question.question_type == 'yes_no' %}
                         <div class="option-group">
                             <label class="option-label">
-                                <input type="radio" name="question_{{ question.id }}" value="yes" {% if
-                                    question.is_required %}required{% endif %}>
+                                <input type="radio" name="question_{{ question.id }}" value="yes" {% if question.is_required %}required{% endif %}>
                                 <span class="option-text">Yes</span>
                             </label>
                             <label class="option-label">
-                                <input type="radio" name="question_{{ question.id }}" value="no" {% if
-                                    question.is_required %}required{% endif %}>
+                                <input type="radio" name="question_{{ question.id }}" value="no" {% if question.is_required %}required{% endif %}>
                                 <span class="option-text">No</span>
                             </label>
                         </div>
@@ -350,8 +348,7 @@
                                 <input type="checkbox" name="question_{{ question.id }}" value="{{ option.id }}"
                                     class="custom-checkbox">
                                 {% else %}
-                                <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" {% if
-                                    question.is_required %}required{% endif %}>
+                                <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" {% if question.is_required %}required{% endif %}>
                                 {% endif %}
                                 {% if option.option_image %}
                                 <img src="{{ option.option_image.url }}" alt="{{ option.text|default:option.id }}"

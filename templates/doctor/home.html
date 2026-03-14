@@ -1,6 +1,6 @@
 {% extends "doctor/base.html" %}
 
-{% block title %}Doctor Dashboard{% endblock %}
+{% block title %}Dentist Dashboard{% endblock %}
 
 {% block breadcrumb_items %}
 <li class="breadcrumb-item active">Dashboard</li>
@@ -76,7 +76,14 @@
                                         style="width: 32px; height: 32px;">
                                         <i class="fas fa-user text-muted fs-6"></i>
                                     </div>
-                                    <span class="fw-semibold">{{ response.patient.full_name }}</span>
+                                    <div>
+                                        {% if response.patient.setu_id %}
+                                        <div class="mb-0">
+                                            <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Setu ID: {{ response.patient.setu_id }}</span>
+                                        </div>
+                                        {% endif %}
+                                        <span class="fw-semibold">{{ response.patient.full_name }}</span>
+                                    </div>
                                 </div>
                             </td>
                             <td>

@@ -10,6 +10,9 @@ class Patient(models.Model):
         OTHER = 'O', _('Other')
         UNSPECIFIED = 'U', _('Prefer not to say')
     
+    # Setu ID (Optional but important)
+    setu_id = models.CharField(_('Setu ID'), max_length=50, null=True, blank=True)
+    
     # Auto-generated patient ID (nullable for migration)
     patient_id = models.CharField(_('patient ID'), max_length=20, unique=True, null=True, blank=True)
     

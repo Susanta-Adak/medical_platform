@@ -20,9 +20,22 @@ from screening.models import ScreeningSession
 User = get_user_model()
 
 class SuperuserRequiredMixin(UserPassesTestMixin):
-    """Mixin to ensure only superusers can access the view."""
+    """Mixin to ensure only Super Admins can access the view."""
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_superuser
+        return self.request.user.is_authenticated and (
+            self.request.user.role == User.Role.SUPER_ADMIN or 
+            self.request.user.is_superuser
+        )
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            if self.request.user.role == User.Role.HEALTH_ASSISTANT:
+                messages.warning(self.request, "Access Denied: You have been redirected to your dashboard.")
+                return redirect('health_assistant:home')
+            elif self.request.user.role == User.Role.DOCTOR:
+                messages.warning(self.request, "Access Denied: You have been redirected to your dashboard.")
+                return redirect('doctor:home')
+        return super().handle_no_permission()
 
 # User Management Views
 class UserListView(SuperuserRequiredMixin, ListView):
@@ -278,10 +291,10 @@ def get_system_health():
     }
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.role == User.Role.SUPER_ADMIN or u.is_superuser)
 def admin_dashboard(request):
     """Admin dashboard view with statistics and recent activities."""
-    if not request.user.is_authenticated or not request.user.is_superuser:
+    if not request.user.is_authenticated or not (request.user.role == User.Role.SUPER_ADMIN or request.user.is_superuser):
         return redirect('login')
     
     # Log admin dashboard access

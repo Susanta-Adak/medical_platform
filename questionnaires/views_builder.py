@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -9,9 +9,17 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 import json
 
+from accounts.models import User
 from .models import Questionnaire, Question, QuestionOption
 
-class QuestionnaireBuilderView(LoginRequiredMixin, CreateView):
+class QuestionnaireBuilderView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """View for creating questionnaires with the simplified builder (Admin only)."""
+    model = Questionnaire
+    template_name = 'questionnaires/questionnaire_builder.html'
+    fields = ['title', 'description']
+    
+    def test_func(self):
+        return self.request.user.role == User.Role.SUPER_ADMIN
     """View for creating questionnaires with the simplified builder."""
     model = Questionnaire
     template_name = 'questionnaires/questionnaire_builder.html'
@@ -30,7 +38,9 @@ class QuestionnaireBuilderView(LoginRequiredMixin, CreateView):
 @require_POST
 @csrf_exempt
 def save_questionnaire_api(request):
-    """API endpoint to save questionnaire with questions and options."""
+    """API endpoint to save questionnaire with questions and options (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        return JsonResponse({'success': False, 'error': 'Permission Denied'}, status=403)
     try:
         # Handle multipart/form-data with JSON encoded in 'data' field
         data_str = request.POST.get('data')
@@ -142,11 +152,12 @@ def save_questionnaire_api(request):
 
 @login_required
 def questionnaire_list_builder(request):
-    """List view for questionnaires with builder interface."""
-    if request.user.is_staff:
-        questionnaires = Questionnaire.objects.all().order_by('-created_at')
-    else:
-        questionnaires = Questionnaire.objects.filter(created_by=request.user).order_by('-created_at')
+    """List view for questionnaires with builder interface (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        messages.error(request, "Permission Denied: Only Super Admins can access the builder.")
+        return redirect('dashboard:dashboard')
+    
+    questionnaires = Questionnaire.objects.all().order_by('-created_at')
         
     return render(request, 'questionnaires/questionnaire_list_builder.html', {
         'questionnaires': questionnaires
@@ -154,13 +165,12 @@ def questionnaire_list_builder(request):
 
 @login_required
 def edit_questionnaire_builder(request, pk):
-    """Edit existing questionnaire with builder interface."""
-    # For staff/superusers, allow editing any questionnaire. 
-    # For regular users, restrict to their own creations.
-    if request.user.is_staff:
-        questionnaire = get_object_or_404(Questionnaire, pk=pk)
-    else:
-        questionnaire = get_object_or_404(Questionnaire, pk=pk, created_by=request.user)
+    """Edit existing questionnaire with builder interface (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        messages.error(request, "Permission Denied: Only Super Admins can access the builder.")
+        return redirect('dashboard:dashboard')
+
+    questionnaire = get_object_or_404(Questionnaire, pk=pk)
     
     if request.method == 'POST':
         # Handle saving edited questionnaire
@@ -337,7 +347,11 @@ def edit_questionnaire_builder(request, pk):
 @login_required
 @require_POST
 def clone_questionnaire(request, pk):
-    """Clone an existing questionnaire to create a new version."""
+    """Clone an existing questionnaire (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        messages.error(request, "Permission Denied.")
+        return redirect('dashboard:dashboard')
+
     original = get_object_or_404(Questionnaire, pk=pk)
     
     # Extract the leading number from the version string to increment the major version
@@ -410,7 +424,10 @@ def clone_questionnaire(request, pk):
 @login_required
 @require_POST
 def toggle_visibility(request, pk):
-    """Toggle whether a questionnaire is visible to health assistants."""
+    """Toggle questionnaire visibility (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        return redirect('dashboard:dashboard')
+
     questionnaire = get_object_or_404(Questionnaire, pk=pk)
     questionnaire.is_active = not questionnaire.is_active
     questionnaire.save()

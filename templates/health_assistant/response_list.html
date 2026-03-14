@@ -96,7 +96,12 @@
                   {{ response.patient.first_name|slice:":1"|default:"?" }}{{ response.patient.last_name|slice:":1"|default:"" }}
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-gray-900 leading-tight">{{ response.patient.first_name }} {{ response.patient.last_name }}</p>
+                  <p class="text-sm font-bold text-gray-900 leading-tight">
+                    {% if response.patient.setu_id %}
+                    <span class="text-emerald-700 font-extrabold mr-1">[{{ response.patient.setu_id }}]</span>
+                    {% endif %}
+                    {{ response.patient.first_name }} {{ response.patient.last_name }}
+                  </p>
                   <p class="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">{{ response.patient.patient_id|default:"ANONYMOUS" }}</p>
                 </div>
               </div>

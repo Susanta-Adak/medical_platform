@@ -13,14 +13,33 @@ from django.utils.translation import gettext_lazy as _
 
 from accounts.models import User
 from ..forms import PatientForm, PatientSearchForm
-from ..models import Patient, MedicalRecord, VitalSigns, PatientNote, Document
+from ..models import Patient, MedicalRecord, PatientVitals, PatientNote, Document
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Mixin to ensure user is staff"""
+    """Mixin to ensure user is either Super Admin or Health Assistant (staff-level access)"""
     def test_func(self):
-        return self.request.user.is_staff
+        user = self.request.user
+        return user.is_staff or user.role in [User.Role.SUPER_ADMIN, User.Role.HEALTH_ASSISTANT]
 
-class PatientListView(StaffRequiredMixin, ListView):
+class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Mixin to ensure user is a Super Admin only"""
+    def test_func(self):
+        return self.request.user.is_authenticated and (
+            self.request.user.role == User.Role.SUPER_ADMIN or 
+            self.request.user.is_superuser
+        )
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            if self.request.user.role == User.Role.HEALTH_ASSISTANT:
+                messages.warning(self.request, "Access Denied: You have been redirected to the Health Assistant portal.")
+                return redirect('health_assistant:home')
+            elif self.request.user.role == User.Role.DOCTOR:
+                messages.warning(self.request, "Access Denied: You have been redirected to the Doctor portal.")
+                return redirect('doctor:home')
+        return super().handle_no_permission()
+
+class PatientListView(AdminRequiredMixin, ListView):
     """View for listing patients with search and filter functionality"""
     model = Patient
     template_name = 'patients/patient_list.html'
@@ -35,6 +54,7 @@ class PatientListView(StaffRequiredMixin, ListView):
         gender = self.request.GET.get('gender', '')
         min_age = self.request.GET.get('min_age')
         max_age = self.request.GET.get('max_age')
+        needs_follow_up = self.request.GET.get('needs_follow_up')
         
         # Apply filters
         if query:
@@ -58,6 +78,11 @@ class PatientListView(StaffRequiredMixin, ListView):
             min_dob = timezone.now().date() - timezone.timedelta(days=365.25 * (int(max_age) + 1))
             queryset = queryset.filter(date_of_birth__gt=min_dob)
             
+        if needs_follow_up == 'yes':
+            queryset = queryset.filter(notes__content__icontains="<strong>Further Followup Required</strong><br>Yes").distinct()
+        elif needs_follow_up == 'no':
+            queryset = queryset.exclude(notes__content__icontains="<strong>Further Followup Required</strong><br>Yes").distinct()
+            
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -65,7 +90,7 @@ class PatientListView(StaffRequiredMixin, ListView):
         context['search_form'] = PatientSearchForm(self.request.GET or None)
         return context
 
-class PatientDetailView(LoginRequiredMixin, DetailView):
+class PatientDetailView(AdminRequiredMixin, DetailView):
     """View for displaying patient details"""
     model = Patient
     template_name = 'patients/patient_detail_simple.html'
@@ -80,7 +105,7 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
         patient = self.get_object()
         
         # Get recent vital signs (last 5)
-        context['vital_signs'] = VitalSigns.objects.filter(patient=patient).order_by('-recorded_at')[:5]
+        context['vital_signs'] = PatientVitals.objects.filter(patient=patient).order_by('-recorded_at')[:5]
         
         # Get recent notes (last 5)
         context['recent_notes'] = PatientNote.objects.filter(patient=patient).order_by('-created_at')[:5]
@@ -94,8 +119,8 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
             
         return context
 
-class PatientCreateView(StaffRequiredMixin, SuccessMessageMixin, CreateView):
-    """View for creating a new patient"""
+class PatientCreateView(AdminRequiredMixin, SuccessMessageMixin, CreateView):
+    """View for creating a new patient (Admin only)"""
     model = Patient
     form_class = PatientForm
     template_name = 'patients/patient_form.html'
@@ -108,8 +133,8 @@ class PatientCreateView(StaffRequiredMixin, SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('patients:detail', kwargs={'patient_id': self.object.patient_id})
 
-class PatientUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    """View for updating an existing patient"""
+class PatientUpdateView(AdminRequiredMixin, SuccessMessageMixin, UpdateView):
+    """View for updating an existing patient (Admin only)"""
     model = Patient
     form_class = PatientForm
     template_name = 'patients/patient_form.html'
@@ -122,8 +147,8 @@ class PatientUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('patients:detail', kwargs={'patient_id': self.object.patient_id})
 
-class PatientDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    """View for deleting a patient"""
+class PatientDeleteView(AdminRequiredMixin, SuccessMessageMixin, DeleteView):
+    """View for deleting a patient (Admin only)"""
     model = Patient
     template_name = 'patients/patient_confirm_delete.html'
     success_url = reverse_lazy('patients:list')
@@ -137,8 +162,8 @@ class PatientDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
-class PatientDashboardView(LoginRequiredMixin, DetailView):
-    """View for patient dashboard with all related information"""
+class PatientDashboardView(AdminRequiredMixin, DetailView):
+    """View for patient dashboard (Admins and Health Assistants)"""
     model = Patient
     template_name = 'patients/patient_dashboard.html'
     context_object_name = 'patient'
@@ -156,7 +181,7 @@ class PatientDashboardView(LoginRequiredMixin, DetailView):
         context['medical_record'] = medical_record
         
         # Get vital signs (paginated)
-        vital_signs = VitalSigns.objects.filter(patient=patient).order_by('-recorded_at')
+        vital_signs = PatientVitals.objects.filter(patient=patient).order_by('-recorded_at')
         vital_signs_paginator = Paginator(vital_signs, 10)
         page_number = self.request.GET.get('vital_page')
         context['vital_signs'] = vital_signs_paginator.get_page(page_number)
@@ -175,9 +200,9 @@ class PatientDashboardView(LoginRequiredMixin, DetailView):
         
         return context
 
-class PatientQuickAddView(LoginRequiredMixin, View):
+class PatientQuickAddView(AdminRequiredMixin, View):
     """
-    View for quickly adding a new patient with minimal information
+    View for quickly adding a new patient (Admin only)
     """
     def get(self, request, *args, **kwargs):
         form = PatientForm()
