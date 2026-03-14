@@ -70,7 +70,13 @@
                             <span class="badge bg-info text-dark" style="font-size: 0.75rem;">Setu ID: {{ patient.setu_id }}</span>
                         </div>
                         {% endif %}
-                        <div class="fw-semibold">{{ patient.full_name }}</div>
+                        <div class="fw-semibold">{{ patient.full_name }}
+                            {% if patient.latest_is_important %}
+                            <span class="badge bg-danger ms-1" style="font-size: 0.65rem; vertical-align: middle;">
+                                <i class="fas fa-redo me-1"></i> Follow-up
+                            </span>
+                            {% endif %}
+                        </div>
                         <small class="text-muted">{{ patient.email|default:"No email" }}</small>
                     </td>
                     <td>{{ patient.get_gender_display }}</td>

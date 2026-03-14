@@ -54,21 +54,20 @@ class PatientListView(DoctorRequiredMixin, ListView):
                 Q(patient_id__icontains=q)
             )
             
-        if needs_follow_up:
-            from patients.models import PatientNote
-            latest_consultation = PatientNote.objects.filter(
-                patient=OuterRef('pk'), 
-                note_type=PatientNote.NoteType.CONSULTATION
-            ).order_by('-created_at')
+        from patients.models import PatientNote
+        latest_consultation = PatientNote.objects.filter(
+            patient=OuterRef('pk'), 
+            note_type=PatientNote.NoteType.CONSULTATION
+        ).order_by('-created_at')
+        
+        queryset = queryset.annotate(
+            latest_is_important=Subquery(latest_consultation.values('is_important')[:1])
+        )
             
-            queryset = queryset.annotate(
-                latest_is_important=Subquery(latest_consultation.values('is_important')[:1])
-            )
-            
-            if needs_follow_up == 'yes':
-                queryset = queryset.filter(latest_is_important=True)
-            elif needs_follow_up == 'no':
-                queryset = queryset.filter(latest_is_important=False)
+        if needs_follow_up == 'yes':
+            queryset = queryset.filter(latest_is_important=True)
+        elif needs_follow_up == 'no':
+            queryset = queryset.filter(latest_is_important=False)
             
         return queryset
 
