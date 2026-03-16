@@ -109,6 +109,13 @@
                             </h6>
                         </div>
 
+                        <div class="col-12 mb-3">
+                            <label for="setu_id" class="form-label text-indigo-700 fw-bold">
+                                <i class="fas fa-id-card me-1"></i>Setu ID <span class="text-muted fw-normal small">(Optional but important)</span>
+                            </label>
+                            <input type="text" class="form-control border-primary" id="setu_id" name="setu_id" placeholder="Optional Setu ID">
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             <label for="first_name" class="form-label">
                                 First Name <span class="text-danger">*</span>
@@ -233,7 +240,10 @@
                     <i class="fas fa-heartbeat me-2"></i>
                     Step 2: Enter Patient Vitals
                 </h5>
-                <span class="badge bg-light text-primary">Patient ID: <span id="vitalsPatientId"></span></span>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-primary me-2" id="vitalsSetuIdBadge" style="display: none;">Setu ID: <span id="vitalsSetuId"></span></span>
+                    <span class="badge bg-light text-primary">Patient ID: <span id="vitalsPatientId"></span></span>
+                </div>
             </div>
             <div class="card-body">
                 <div class="alert alert-light border-primary mb-4">
@@ -838,7 +848,8 @@
     }
 
     function showPhoneDuplicateModal(patients, message) {
-        const modal = new bootstrap.Modal(document.getElementById('phoneDuplicateModal'));
+        const modalElement = document.getElementById('phoneDuplicateModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
         const patientsList = document.getElementById('duplicatePatientsList');
 
         // Show message
@@ -858,8 +869,9 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <strong>${patient.name}</strong>
+                        ${patient.setu_id ? `<span class="badge bg-light text-dark border ms-1">Setu: ${patient.setu_id}</span>` : ''}
                         <br><small class="text-muted">Age: ${patient.age} | Gender: ${patient.gender}</small>
-                        <br><small class="text-muted">Phone: ${patient.phone}</small>
+                        <br><small class="text-muted">ID: ${patient.patient_id} | Phone: ${patient.phone}</small>
                         ${createdDate !== 'Recently' ? `<br><small class="text-info">Registered: ${createdDate}</small>` : ''}
                     </div>
                     <button class="btn btn-sm btn-primary" onclick="selectDuplicatePatient(${patient.id})">
@@ -879,20 +891,17 @@
         // Setup button handlers
         document.getElementById('selectExistingPatientBtn').onclick = () => {
             modal.hide();
-            // Clear form and let user select first patient
-            clearPatientForm();
+            // Just hide the modal so user can pick from the list or search again
         };
 
         document.getElementById('useDifferentPhoneBtn').onclick = () => {
             modal.hide();
-            // Focus on phone number field for correction
-            clearPatientForm();
-            document.getElementById('phone_number').focus();
-        };
-
-        document.getElementById('selectDuplicatePatientBtn').onclick = () => {
-            modal.hide();
-            selectExistingPatient(selectedDuplicatePatientId);
+            // Clear only phone number and focus it for correction
+            const phoneField = document.getElementById('phone_number');
+            if (phoneField) {
+                phoneField.value = '';
+                phoneField.focus();
+            }
         };
     }
 
@@ -913,8 +922,9 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>${patient.first_name || ''} ${patient.last_name || ''}</strong>
+                                ${patient.setu_id ? `<span class="badge bg-light text-dark border ms-1">Setu: ${patient.setu_id}</span>` : ''}
                                 <br><small class="text-muted">Age: ${patient.age} | Gender: ${patient.gender}</small>
-                                ${patient.phone ? `<br><small class="text-muted">Phone: ${patient.phone}</small>` : ''}
+                                <br><small class="text-muted">ID: ${patient.patient_id} ${patient.phone ? `| Phone: ${patient.phone}` : ''}</small>
                             </div>
                             <button class="btn btn-sm btn-primary">Select</button>
                         </div>
@@ -1052,7 +1062,17 @@
 
             document.getElementById('vitalsPatientId').textContent = patientId;
             document.getElementById('vitalsPatientName').textContent = fullName;
-            document.getElementById('vitalsPatientDetail').textContent = `Age: ${age} | Gender: ${gender}`;
+            
+            let details = `Age: ${age} | Gender: ${gender}`;
+            if (currentPatient.setu_id) {
+                document.getElementById('vitalsSetuId').textContent = currentPatient.setu_id;
+                document.getElementById('vitalsSetuIdBadge').style.display = 'inline-block';
+                details = `Setu ID: ${currentPatient.setu_id} | ${details}`;
+            } else {
+                document.getElementById('vitalsSetuIdBadge').style.display = 'none';
+            }
+            
+            document.getElementById('vitalsPatientDetail').textContent = details;
             document.getElementById('vitalsPatientHiddenId').value = currentPatient.id;
         }
     }
@@ -1106,6 +1126,8 @@
 
             document.getElementById('patientSummary').innerHTML = `
                 <p class="mb-1"><strong>Name:</strong> ${fullName}</p>
+                ${currentPatient.setu_id ? `<p class="mb-1"><strong>Setu ID:</strong> <span class="badge bg-light text-dark border">${currentPatient.setu_id}</span></p>` : ''}
+                <p class="mb-1"><strong>Patient ID:</strong> ${currentPatient.patient_id || 'N/A'}</p>
                 <p class="mb-1"><strong>Age:</strong> ${age}</p>
                 <p class="mb-1"><strong>Gender:</strong> ${gender}</p>
                 ${phone !== 'N/A' ? `<p class="mb-0"><strong>Phone:</strong> ${phone}</p>` : ''}
@@ -1520,12 +1542,11 @@
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <strong>Patient ID:</strong> 
-                    <span class="badge bg-primary fs-6">${currentPatient.patient_id || currentPatient.id || 'N/A'}</span>
+                    <p class="mb-2"><strong>Patient ID:</strong> <span class="badge bg-primary fs-6">${currentPatient.patient_id || currentPatient.id || 'N/A'}</span></p>
+                    <p class="mb-2"><strong>Setu ID:</strong> <span class="badge bg-light text-dark border">${currentPatient.setu_id || 'Not Provided'}</span></p>
                 </div>
                 <div class="col-md-6">
-                    <strong>Name:</strong> 
-                    ${currentPatient.name || (currentPatient.first_name + ' ' + currentPatient.last_name) || 'N/A'}
+                    <p class="mb-2"><strong>Name:</strong> ${currentPatient.name || (currentPatient.first_name + ' ' + currentPatient.last_name) || 'N/A'}</p>
                 </div>
             </div>
             <div class="row mt-2">

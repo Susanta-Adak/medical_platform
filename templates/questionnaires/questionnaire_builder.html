@@ -348,7 +348,7 @@
         buildNumbers(document.getElementById('questionsContainer'), '');
     }
 
-    function handleQuestionTypeChange(select) {
+    function handleQuestionTypeChange(select, autofill = true) {
         const questionItem = select.closest('.question-item');
         const optionsContainer = questionItem.querySelector('.multiple-choice-options');
         const yesNoActions = questionItem.querySelector('.yes-no-actions');
@@ -358,7 +358,7 @@
             if (yesNoActions) yesNoActions.classList.add('hidden');
             // Add default options if none exist
             const container = optionsContainer.querySelector('.options-container');
-            if (container.children.length === 0) {
+            if (autofill && container.children.length === 0) {
                 addOption(optionsContainer.querySelector('.btn'));
                 addOption(optionsContainer.querySelector('.btn'));
             }
@@ -696,6 +696,11 @@
             clone.querySelector('.question-text').value = existingData.question_text || existingData.text || '';
             clone.querySelector('.question-type').value = existingData.type || '';
             clone.querySelector('.question-required').checked = existingData.required || false;
+            
+            const multiSelectCheckbox = clone.querySelector('.question-allow-multiple');
+            if (multiSelectCheckbox) {
+                multiSelectCheckbox.checked = existingData.allow_multiple_selections || false;
+            }
 
             if (existingData.reference_image_url) {
                 const previewDiv = clone.querySelector('.question-image-preview');
@@ -720,7 +725,7 @@
             // Handle question type change to show options if needed
             const questionTypeSelect = clone.querySelector('.question-type');
             setTimeout(() => {
-                handleQuestionTypeChange(questionTypeSelect);
+                handleQuestionTypeChange(questionTypeSelect, false);
                 if (existingData.type === 'multiple_choice' && existingData.options) {
                     const optionsContainer = questionItem.querySelector('.options-container');
                     existingData.options.forEach(optionData => {
@@ -757,7 +762,7 @@
             if (existingData.type === 'multiple_choice' && existingData.options) {
                 // Add options after the element is in the DOM
                 setTimeout(() => {
-                    handleQuestionTypeChange(questionTypeSelect);
+                    handleQuestionTypeChange(questionTypeSelect, false);
                     const optionsContainer = questionItem.querySelector('.options-container');
                     existingData.options.forEach(optionData => {
                         addOptionWithData(questionItem, optionData);

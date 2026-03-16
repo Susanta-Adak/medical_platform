@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.utils import timezone
 from collections import defaultdict
 import csv
 import io
@@ -18,6 +19,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime
 
+from accounts.models import User
 from .models import Questionnaire, Question, QuestionOption, Response, Answer
 from .forms import QuestionnaireForm, QuestionForm, ResponseForm
 
@@ -29,7 +31,20 @@ class QuestionnaireListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     paginate_by = 10
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.is_authenticated and (
+            self.request.user.role == User.Role.SUPER_ADMIN or 
+            self.request.user.is_superuser
+        )
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            if self.request.user.role == User.Role.HEALTH_ASSISTANT:
+                messages.warning(self.request, "Access Denied: You have been redirected to your dashboard.")
+                return redirect('health_assistant:home')
+            elif self.request.user.role == User.Role.DOCTOR:
+                messages.warning(self.request, "Access Denied: You have been redirected to your dashboard.")
+                return redirect('doctor:home')
+        return super().handle_no_permission()
     
     def get_queryset(self):
         return Questionnaire.objects.all().order_by('-created_at')
@@ -40,7 +55,7 @@ class QuestionnaireCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVie
     template_name = 'questionnaires/questionnaire_form.html'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -56,7 +71,7 @@ class QuestionnaireUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
     template_name = 'questionnaires/questionnaire_form.html'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def form_valid(self, form):
         messages.success(self.request, 'Questionnaire updated successfully.')
@@ -71,7 +86,7 @@ class QuestionnaireDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVie
     context_object_name = 'questionnaire'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -84,7 +99,7 @@ class QuestionnaireDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteVie
     success_url = reverse_lazy('questionnaires:list')
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Questionnaire deleted successfully.')
@@ -97,7 +112,7 @@ class QuestionCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     template_name = 'questionnaires/question_form.html'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def get_initial(self):
         initial = super().get_initial()
@@ -161,7 +176,7 @@ class QuestionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'questionnaires/question_form.html'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -222,7 +237,7 @@ class QuestionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'questionnaires/question_confirm_delete.html'
     
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.role == User.Role.SUPER_ADMIN
     
     def get_success_url(self):
         questionnaire_id = self.object.questionnaire.id
@@ -490,6 +505,8 @@ def questionnaire_start(request, pk):
         if form.is_valid():
             response = form.save(commit=False)
             response.questionnaire = questionnaire
+            response.is_complete = True
+            response.submitted_at = timezone.now()
             if request.user.is_authenticated:
                 response.respondent = request.user
             
@@ -504,7 +521,7 @@ def questionnaire_start(request, pk):
                     pass
             
             response.save()
-            form.save_answers()
+            form.save_answers(response)
             
             # Return JSON response for AJAX requests
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -530,9 +547,9 @@ def questionnaire_start(request, pk):
     if questionnaire.title.lower() == 'patient registration' or 'patient' in questionnaire.title.lower():
         template = 'questionnaires/patient_profile_form.html'
     elif questionnaire.title.lower() == 'medical screening questionnaire' or 'medical screening' in questionnaire.title.lower():
-        template = 'questionnaires/simple_screening_form.html'
+        template = 'questionnaires/simple_questionnaire_display.html'
     else:
-        template = 'questionnaires/simple_questionnaire_display.html'  # Use our new template
+        template = 'questionnaires/simple_questionnaire_display.html'
     
     return render(request, template, {
         'questionnaire': questionnaire,
@@ -579,8 +596,12 @@ def update_question_order(request):
         }, status=500)
 
 
+@login_required
 def simple_questionnaire_builder(request):
-    """Simple questionnaire builder for creating medical screening questionnaires."""
+    """Simple questionnaire builder for creating medical screening questionnaires (Admin only)."""
+    if request.user.role != User.Role.SUPER_ADMIN:
+        messages.error(request, "Permission Denied: Only Super Admins can access the builder.")
+        return redirect('dashboard:dashboard')  # Consistent with dashboard/urls.py
     return render(request, 'questionnaires/simple_questionnaire_builder.html')
 
 

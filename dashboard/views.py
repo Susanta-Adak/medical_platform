@@ -18,24 +18,40 @@ User = get_user_model()
 
 def admin_required(view_func):
     """
-    Decorator for views that checks that the user is an admin or staff,
-    redirecting to the login page if necessary.
+    Decorator for views that checks that the user is an admin (SUPER_ADMIN role),
+    redirecting to the login page if necessary or returning 403.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
-        if not (request.user.is_staff or request.user.is_superuser):
-            return HttpResponseForbidden("You don't have permission to access this page.")
-        return view_func(request, *args, **kwargs)
+        
+        # Priority check: Role-based access control
+        user_role = getattr(request.user, 'role', None)
+        if user_role == User.Role.SUPER_ADMIN or request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+            
+        return HttpResponseForbidden("Access Denied: You do not have Super Admin privileges.")
     return _wrapped_view
 
 @login_required
 def dashboard(request):
-    # If user is staff or superuser, redirect to admin dashboard
-    if request.user.is_staff or request.user.is_superuser:
+    """Redirect users to their respective home pages based on role."""
+    user = request.user
+    
+    # Check roles defined in User.Role
+    if user.role == User.Role.SUPER_ADMIN:
         return redirect('dashboard:admin_dashboard')
-    # For regular users, redirect to patients app
+    elif user.role == User.Role.HEALTH_ASSISTANT:
+        return redirect('health_assistant:home')
+    elif user.role == User.Role.DOCTOR:
+        return redirect('doctor:home')
+        
+    # Fallback for staff/superusers who might not have a role set (though manager ensures they do)
+    if user.is_superuser or user.is_staff:
+        return redirect('dashboard:admin_dashboard')
+        
+    # Default for regular users (patients)
     return redirect('patients:add')
 
 @method_decorator([login_required, admin_required], name='dispatch')

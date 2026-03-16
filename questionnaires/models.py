@@ -300,6 +300,11 @@ class Response(models.Model):
         else:
             return f"Response to {self.questionnaire.title} by Anonymous"
     
+    def save(self, *args, **kwargs):
+        if self.is_complete and not self.submitted_at:
+            self.submitted_at = timezone.now()
+        super().save(*args, **kwargs)
+    
     def get_absolute_url(self):
         return reverse('questionnaires:response_detail', args=[str(self.id)])
     

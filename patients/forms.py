@@ -25,11 +25,15 @@ class PatientForm(BaseForm):
     class Meta:
         model = Patient
         fields = [
-            'patient_id', 'first_name', 'last_name', 'date_of_birth', 'gender',
+            'setu_id', 'patient_id', 'first_name', 'last_name', 'date_of_birth', 'gender',
             'email', 'phone_number', 'address', 'city', 'state', 'postal_code', 'country',
             'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation'
         ]
         widgets = {
+            'setu_id': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Optional Setu ID'
+            }),
             'patient_id': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Auto-generated or manual',

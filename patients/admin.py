@@ -38,13 +38,13 @@ class DocumentInline(admin.TabularInline):
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'age', 'gender', 'phone_number', 'email', 'city', 'created_at')
-    search_fields = ('first_name', 'last_name', 'phone_number', 'email', 'city', 'emergency_contact_name')
+    list_display = ('setu_id', 'patient_id', 'full_name', 'age', 'gender', 'phone_number', 'email', 'city', 'created_at')
+    search_fields = ('setu_id', 'patient_id', 'first_name', 'last_name', 'phone_number', 'email', 'city', 'emergency_contact_name')
     list_filter = ('gender', 'city', 'created_at')
-    readonly_fields = ('age', 'created_at', 'updated_at')
+    readonly_fields = ('patient_id', 'age', 'created_at', 'updated_at')
     fieldsets = (
         ('Personal Information', {
-            'fields': (('first_name', 'last_name'), 'date_of_birth', 'gender', 'email', 'phone_number')
+            'fields': (('setu_id', 'patient_id'), ('first_name', 'last_name'), 'date_of_birth', 'gender', 'email', 'phone_number')
         }),
         ('Address', {
             'fields': ('address', 'city', 'state', 'postal_code', 'country')

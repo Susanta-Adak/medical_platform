@@ -33,9 +33,10 @@
     opacity: 1;
   }
 </style>
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h2 style="margin:0;">Patients
+<div class="card border-0 shadow-sm overflow-hidden">
+  <div class="card-header d-flex justify-content-between align-items-center text-white border-0 py-3" style="background-color: #10b981;">
+    <h5 class="mb-0 fw-bold"><i class="fas fa-users-cog me-2"></i>Patient Management</h5>
+
       <script>
         // Check for URL parameters that indicate a successful update
         const urlParams = new URLSearchParams(window.location.search);
@@ -261,72 +262,118 @@
     </div>
     {% endif %}
 
+    <!-- Ultra-Compact Single Line Filter Bar -->
+    <div class="mb-4 p-1 bg-light rounded border border-emerald-100 d-inline-block shadow-sm">
+      <form method="GET" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; flex-wrap: nowrap !important; margin: 0; padding: 2px 6px;">
+        <div class="input-group input-group-sm" style="width: 170px;">
+          <span class="input-group-text bg-white border-end-0 text-muted" style="padding: 0 8px;"><i class="fas fa-search"></i></span>
+          <input type="text" name="query" class="form-control border-start-0" placeholder="Patient Name/ID..." value="{{ request.GET.query }}" style="font-size: 0.75rem; height: 32px;">
+        </div>
+        
+        <select name="gender" class="form-select form-select-sm" style="width: 90px; font-size: 0.75rem; height: 32px;">
+          <option value="">Gender</option>
+          <option value="M" {% if request.GET.gender == 'M' %}selected{% endif %}>Male</option>
+          <option value="F" {% if request.GET.gender == 'F' %}selected{% endif %}>Female</option>
+        </select>
+        
+        <select name="needs_follow_up" class="form-select form-select-sm" style="width: 130px; font-size: 0.75rem; height: 32px;">
+          <option value="">Follow-up Status</option>
+          <option value="yes" {% if request.GET.needs_follow_up == 'yes' %}selected{% endif %}>Required</option>
+          <option value="no" {% if request.GET.needs_follow_up == 'no' %}selected{% endif %}>Not Required</option>
+        </select>
+        
+        <div style="display: flex; gap: 4px;">
+          <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm" style="background-color: #10b981; border-color: #10b981; font-size: 0.75rem; height: 32px;">
+            Filter
+          </button>
+          <a href="{% url 'patients:list' %}" class="btn btn-outline-secondary btn-sm px-2 shadow-sm" style="font-size: 0.75rem; height: 32px; display: flex; align-items: center; border-color: #dee2e6;">
+            <i class="fas fa-redo"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+
     <!-- Patients List -->
     {% if patients %}
     <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light text-uppercase small fw-bold text-muted">
           <tr>
-            <th>Patient ID</th>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Contact</th>
-            <th>Created</th>
-            <th>Actions</th>
+            <th class="ps-4 py-3">Setu ID</th>
+            <th class="py-3">Patient ID</th>
+            <th class="py-3">Details</th>
+            <th class="py-3 text-center">Age/Gender</th>
+            <th class="py-3">Contact</th>
+            <th class="py-3">Registration</th>
+            <th class="py-3 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for patient in patients %}
-          <tr data-patient-id="{{ patient.patient_id }}">
+          <tr data-patient-id="{{ patient.patient_id }}" class="border-bottom">
+            <td class="ps-4">
+              {% if patient.setu_id %}
+              <span class="badge rounded-pill bg-light text-dark border px-2 py-1" style="font-size: 0.8rem; border: 1px solid #dee2e6;">
+                {{ patient.setu_id }}
+              </span>
+              {% else %}
+              <span class="text-muted small">N/A</span>
+              {% endif %}
+            </td>
             <td>
               <a href="{% url 'patients:dashboard' patient.patient_id %}" class="text-decoration-none">
-                <span class="badge bg-primary">{{ patient.patient_id }}</span>
+                <span class="badge rounded-pill bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-2" style="background-color: #ecfdf5; color: #047857; border: 1px solid #d1fae5;">
+                  {{ patient.patient_id }}
+                </span>
               </a>
             </td>
             <td>
               <a href="{% url 'patients:dashboard' patient.patient_id %}"
                 class="text-decoration-none text-dark d-block">
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center py-1">
                   <div
-                    class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                    style="width: 32px; height: 32px;">
+                    class="avatar-sm text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
+                    style="width: 38px; height: 38px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 600;">
                     {{ patient.first_name.0 }}{{ patient.last_name.0 }}
                   </div>
                   <div>
-                    <div class="fw-medium text-dark">{{ patient.get_full_name }}</div>
-                    <small class="text-muted">{{ patient.email|default:"No email" }}</small>
+                    <div class="fw-bold text-dark">{{ patient.get_full_name }}</div>
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">{{ patient.email|default:"No email address" }}</small>
                   </div>
                 </div>
               </a>
             </td>
-            <td>{{ patient.age }}</td>
-            <td>
-              <span class="badge bg-secondary">{{ patient.get_gender_display }}</span>
+            <td class="text-center">
+              <div class="fw-medium text-dark">{{ patient.age|default:"N/A" }} Yrs</div>
+              <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.7rem;">{{ patient.get_gender_display }}</span>
             </td>
             <td>
-              <div>
-                {% if patient.phone_number %}
-                {{ patient.phone_number }}
-                {% else %}
-                <span class="text-muted">No phone</span>
-                {% endif %}
+              <div class="d-flex flex-column">
+                <div class="fw-medium">
+                  <i class="fas fa-phone-alt me-1 text-muted small"></i>
+                  {% if patient.phone_number %}{{ patient.phone_number }}{% else %}<span class="text-muted italic">N/A</span>{% endif %}
+                </div>
               </div>
             </td>
             <td>
-              <small>{{ patient.created_at|date:"M d, Y" }}</small>
+              <div class="text-muted small">
+                <i class="far fa-calendar-alt me-1"></i>
+                {{ patient.created_at|date:"M d, Y" }}
+              </div>
             </td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <a href="{% url 'patients:update' patient.patient_id %}" class="btn btn-outline-secondary has-tooltip"
-                  aria-label="Edit Patient">
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-2">
+                {% if request.user.is_super_admin %}
+                <a href="{% url 'patients:update' patient.patient_id %}" class="btn btn-sm btn-outline-emerald has-tooltip" 
+                   style="border-color: #10b981; color: #10b981;" onmouseover="this.style.backgroundColor='#10b981'; this.style.color='white'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#10b981'">
                   <i class="fas fa-edit"></i>
-                  <span class="tooltip-text">Edit Patient</span>
+                  <span class="tooltip-text">Edit Details</span>
                 </a>
-                <a href="{% url 'patients:dashboard' patient.patient_id %}" class="btn btn-outline-info has-tooltip"
-                  aria-label="Patient Dashboard">
+                {% endif %}
+                <a href="{% url 'patients:dashboard' patient.patient_id %}" class="btn btn-sm btn-emerald has-tooltip"
+                   style="background-color: #10b981; border-color: #10b981; color: white;">
                   <i class="fas fa-chart-line"></i>
-                  <span class="tooltip-text">Patient Dashboard</span>
+                  <span class="tooltip-text">View Dashboard</span>
                 </a>
               </div>
             </td>
@@ -336,25 +383,29 @@
       </table>
     </div>
 
-    <!-- Pagination -->
+    <!-- Modern Pagination -->
     {% if is_paginated %}
     <nav aria-label="Page navigation" class="mt-4">
-      <ul class="pagination justify-content-center">
+      <ul class="pagination pagination-sm justify-content-center">
         {% if patients.has_previous %}
         <li class="page-item">
-          <a class="page-link"
-            href="?page={{ patients.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+          <a class="page-link border-0 rounded-circle mx-1 text-emerald-600"
+            href="?page={{ patients.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+            <i class="fas fa-chevron-left"></i>
+          </a>
         </li>
         {% endif %}
 
         <li class="page-item active">
-          <span class="page-link">Page {{ patients.number }} of {{ patients.paginator.num_pages }}</span>
+          <span class="page-link border-0 rounded-circle mx-1" style="background-color: #10b981; color: white;">{{ patients.number }}</span>
         </li>
 
         {% if patients.has_next %}
         <li class="page-item">
-          <a class="page-link"
-            href="?page={{ patients.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+          <a class="page-link border-0 rounded-circle mx-1 text-emerald-600"
+            href="?page={{ patients.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+            <i class="fas fa-chevron-right"></i>
+          </a>
         </li>
         {% endif %}
       </ul>

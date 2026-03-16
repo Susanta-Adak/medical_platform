@@ -1,7 +1,7 @@
 {% extends "dashboard/admin/base.html" %}
 {% load static %}
 
-{% block page_title %}Patient Dashboard - {{ patient.patient_id }}{% endblock %}
+{% block page_title %}Patient Dashboard - {% if patient.setu_id %}{{ patient.setu_id }} / {% endif %}{{ patient.patient_id }}{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid">
@@ -10,18 +10,28 @@
     <div>
       <h1 class="h3 mb-0">Patient Dashboard</h1>
       <p class="text-muted mb-0">
-        {{ patient.first_name }} {{ patient.last_name }} ({{ patient.patient_id }})
+        {{ patient.first_name }} {{ patient.last_name }} {% if patient.setu_id %}<span class="badge bg-light text-dark border ms-1">{{ patient.setu_id }}</span>{% endif %} ({{ patient.patient_id }})
       </p>
     </div>
+    {% if request.user.is_super_admin %}
     <div class="btn-group">
       <a href="{% url 'patients:update' patient_id=patient.patient_id %}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-edit me-2"></i>Edit Patient
       </a>
     </div>
+    {% endif %}
   </div>
 
   <!-- Patient Summary Cards -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+    <div class="card border-t-4 border-t-indigo-500 flex-1">
+      <div class="card-body text-center p-4">
+        <i class="fas fa-id-card text-3xl text-indigo-500 mb-2"></i>
+        <h6 class="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-1">Setu ID</h6>
+        <p class="text-xl font-bold mb-0">{{ patient.setu_id|default:"N/A" }}</p>
+      </div>
+    </div>
+
     <div class="card border-t-4 border-t-emerald-500 flex-1">
       <div class="card-body text-center p-4">
         <i class="fas fa-user-injured text-3xl text-emerald-500 mb-2"></i>
@@ -141,12 +151,12 @@
           <div class="border-b border-gray-100 pb-3 mb-3">
             <small class="text-gray-500 block mb-1">{{ vital.recorded_at|date:"M d, Y H:i" }}</small>
             <div class="flex justify-between text-sm mb-1">
-              <span><strong>BP:</strong> {{ vital.systolic_bp }}/{{ vital.diastolic_bp }}</span>
+              <span><strong>BP:</strong> {{ vital.blood_pressure_systolic }}/{{ vital.blood_pressure_diastolic }}</span>
               <span><strong>HR:</strong> {{ vital.heart_rate }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span><strong>Temp:</strong> {{ vital.temperature }}°F</span>
-              <span><strong>SpO2:</strong> {{ vital.oxygen_saturation }}%</span>
+              <span><strong>SpO2:</strong> {{ vital.spo2 }}%</span>
             </div>
           </div>
           {% endfor %}
@@ -170,7 +180,8 @@
           <div class="border-b border-gray-100 pb-3 mb-3">
             <small class="text-gray-500 block mb-1">{{ note.created_at|date:"M d, Y H:i" }}</small>
             <div class="font-bold text-gray-800">{{ note.title }}</div>
-            <div class="text-sm text-gray-600 mt-1">{{ note.content|truncatewords:20 }}</div>
+            <div class="text-sm text-gray-800 bg-gray-50 p-3 mt-2 rounded border border-gray-100">{{ note.content|safe }}</div>
+
           </div>
           {% endfor %}
           {% else %}

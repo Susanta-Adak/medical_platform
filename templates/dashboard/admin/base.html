@@ -174,20 +174,22 @@
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-shield-alt sidebar-logo"></i>
-                <span class="sidebar-title">Admin</span>
+                <span class="sidebar-title">{% if request.user.is_super_admin %}Admin{% elif request.user.is_health_assistant %}Health Assistant{% else %}Medical{% endif %}</span>
             </div>
             <nav class="sidebar-nav">
-                <a href="{% url 'dashboard:admin_dashboard' %}"
-                    class="nav-item {% if 'admin/dashboard' in request.path %}active{% endif %}">
+                <a href="{% if request.user.is_super_admin %}{% url 'dashboard:admin_dashboard' %}{% else %}{% url 'health_assistant:home' %}{% endif %}"
+                    class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
                     <i class="fas fa-tachometer-alt nav-icon"></i>
                     Dashboard
                 </a>
+                {% if request.user.is_super_admin %}
                 <a href="{% url 'dashboard:admin:user_list' %}"
                     class="nav-item {% if 'admin/users' in request.path %}active{% endif %}">
                     <i class="fas fa-users nav-icon"></i>
                     Users
                 </a>
-                <a href="{% url 'patients:list' %}"
+                {% endif %}
+                <a href="{% if request.user.is_super_admin %}{% url 'patients:list' %}{% else %}{% url 'health_assistant:patient_list' %}{% endif %}"
                     class="nav-item {% if 'patients' in request.path %}active{% endif %}">
                     <i class="fas fa-user-injured nav-icon"></i>
                     Patients
@@ -197,11 +199,12 @@
                     <i class="fas fa-clipboard-check nav-icon"></i>
                     Responses
                 </a>
-                <a href="{% url 'screening:session_list' %}"
+                <a href="{% if request.user.is_super_admin %}{% url 'screening:session_list' %}{% else %}{% url 'health_assistant:my_sessions' %}{% endif %}"
                     class="nav-item {% if 'screening' in request.path %}active{% endif %}">
                     <i class="fas fa-stethoscope nav-icon"></i>
                     Screening
                 </a>
+                {% if request.user.is_super_admin %}
                 <a href="{% url 'questionnaires:list' %}"
                     class="nav-item {% if 'questionnaires' in request.path %}active{% endif %}">
                     <i class="fas fa-clipboard-list nav-icon"></i>
@@ -212,6 +215,8 @@
                     <i class="fas fa-magic nav-icon"></i>
                     Questionnaire Builder
                 </a>
+                {% endif %}
+                {% if request.user.is_super_admin %}
                 <a href="{% url 'dashboard:admin:device_list' %}"
                     class="nav-item {% if 'admin/devices' in request.path %}active{% endif %}">
                     <i class="fas fa-tablet-alt nav-icon"></i>
@@ -227,6 +232,7 @@
                     <i class="fas fa-cog nav-icon"></i>
                     Settings
                 </a>
+                {% endif %}
             </nav>
         </aside>
 

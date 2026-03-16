@@ -139,6 +139,16 @@ class PatientDashboardView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         # Add any additional context for the dashboard
         context['questionnaire_responses'] = self.object.questionnaire_responses.all().order_by('-submitted_at')[:5]
+        context['vital_signs'] = self.object.vitals.all().order_by('-recorded_at')[:5]
+        context['notes'] = self.object.notes.all().order_by('-created_at')[:5]
+        context['documents'] = self.object.documents.all().order_by('-uploaded_at')[:5]
+        
+        # Medical record
+        try:
+            context['medical_record'] = self.object.medical_record
+        except Exception:
+            context['medical_record'] = None
+            
         return context
 
 
