@@ -302,8 +302,24 @@ def session_overview(request, session_id):
     
     session = get_object_or_404(ScreeningSession, id=session_id)
     
+    # Fetch readings associated with this session from the reading_data JSON field
+    from devices.models import DeviceReading
+    readings = DeviceReading.objects.filter(
+        patient=session.patient,
+        # We also filter by time range to be safe, or just by the session_id string in JSON
+        reading_data__session_id=str(session_id)
+    ).order_by('recorded_at')
+
+    # If not found by string, try int (since it might be stored either way depending on source)
+    if not readings.exists():
+        readings = DeviceReading.objects.filter(
+            patient=session.patient,
+            reading_data__session_id=int(session_id)
+        ).order_by('recorded_at')
+    
     return render(request, 'health_assistant/session_overview.html', {
         'session': session,
+        'readings': readings
     })
 
 
