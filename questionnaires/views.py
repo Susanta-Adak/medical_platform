@@ -774,10 +774,22 @@ def download_responses(request):
         
         # Write data rows
         for response in q_responses:
-            # Use specifically linked vitals, fallback to latest for compatibility
+            # Use specifically linked vitals snapshot if available
             vitals = response.vitals
             if not vitals and response.patient:
-                vitals = PatientVitals.objects.filter(patient=response.patient).order_by('-recorded_at').first()
+                # Fallback: Find vitals recorded at or before the response time
+                # Uses submitted_at (if complete) or started_at
+                ref_time = response.submitted_at or response.started_at or timezone.now()
+                vitals = PatientVitals.objects.filter(
+                    patient=response.patient,
+                    recorded_at__lte=ref_time
+                ).order_by('-recorded_at').first()
+                
+                # If still none recorded before (backwards compatibility), get very latest
+                if not vitals:
+                    vitals = PatientVitals.objects.filter(
+                        patient=response.patient
+                    ).order_by('-recorded_at').first()
             
             row = [
                 response.id,
