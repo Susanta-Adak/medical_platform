@@ -827,7 +827,14 @@
                 'X-CSRFToken': getCookie('csrftoken')
             }
         })
-            .then(response => response.json())
+            .then(async response => {
+                if (response.redirected && response.url.includes('/login/')) {
+                    showAlert('Session expired. Redirecting to login...', 'warning');
+                    setTimeout(() => window.location.href = response.url, 1500);
+                    throw new Error('Session expired');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.patients && data.patients.length > 0) {
                     // Check if there are phone duplicates
@@ -1011,18 +1018,30 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-            .then(response => {
-                // Check if response is JSON or HTML
+            .then(async response => {
+                if (response.redirected && response.url.includes('/login/')) {
+                    showAlert('Session expired. Redirecting to login...', 'warning');
+                    setTimeout(() => window.location.href = response.url, 1500);
+                    throw new Error('Session expired');
+                }
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    }
+                    throw new Error(`Server error (${response.status})`);
+                }
+
                 const contentType = response.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
                     return response.json();
                 } else {
-                    // If it's HTML (redirect), treat as success
-                    return { success: true, message: 'Registration successful' };
+                    throw new Error('Invalid server response format (expected JSON)');
                 }
             })
             .then(data => {
-                if (data.success) {
+                if (data.success && data.patient) {
                     currentPatient = data.patient;
                     showStep2();
 
@@ -1032,7 +1051,7 @@
                 } else if (data.has_phone_duplicates) {
                     // Specific handling for phone duplicates
                     showPhoneDuplicateModal(data.patients, data.message);
-                } else {
+                } else if (!data.success) {
                     if (data.errors) {
                         // Display field-specific errors
                         for (const [field, messages] of Object.entries(data.errors)) {
@@ -1098,7 +1117,12 @@
             }
             
             document.getElementById('vitalsPatientDetail').textContent = details;
-            document.getElementById('vitalsPatientHiddenId').value = currentPatient.id;
+            const hiddenIdField = document.getElementById('vitalsPatientHiddenId');
+            if (hiddenIdField) hiddenIdField.value = currentPatient.id;
+        } else {
+            console.warn('showStep2 called without currentPatient');
+            showAlert('Patient data missing. Please try selecting or registering the patient again.', 'warning');
+            showStep1();
         }
     }
 
@@ -1122,7 +1146,23 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-            .then(response => response.json())
+            .then(async response => {
+                if (response.redirected && response.url.includes('/login/')) {
+                    showAlert('Session expired. Redirecting to login...', 'warning');
+                    setTimeout(() => window.location.href = response.url, 1500);
+                    throw new Error('Session expired');
+                }
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    }
+                    throw new Error(`Server error (${response.status})`);
+                }
+
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showAlert('Vitals saved successfully', 'success');
@@ -1233,7 +1273,14 @@
                 'X-CSRFToken': getCookie('csrftoken')
             }
         })
-            .then(response => response.json())
+            .then(async response => {
+                if (response.redirected && response.url.includes('/login/')) {
+                    showAlert('Session expired. Redirecting to login...', 'warning');
+                    setTimeout(() => window.location.href = response.url, 1500);
+                    throw new Error('Session expired');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.questionnaires && data.questionnaires.length > 0) {
                     listDiv.innerHTML = data.questionnaires.map(q => `
@@ -1532,7 +1579,23 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-            .then(response => response.json())
+            .then(async response => {
+                if (response.redirected && response.url.includes('/login/')) {
+                    showAlert('Session expired. Redirecting to login...', 'warning');
+                    setTimeout(() => window.location.href = response.url, 1500);
+                    throw new Error('Session expired');
+                }
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    }
+                    throw new Error(`Server error (${response.status})`);
+                }
+
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showSuccessModal('completion');
@@ -1595,11 +1658,11 @@
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Patient ID:</strong> <span class="badge bg-primary fs-6">${currentPatient.patient_id || currentPatient.id || 'N/A'}</span></p>
-                    <p class="mb-2"><strong>Setu ID:</strong> <span class="badge bg-light text-dark border">${currentPatient.setu_id || 'Not Provided'}</span></p>
+                    <p class="mb-2"><strong>Patient ID:</strong> <span class="badge bg-primary fs-6">${(currentPatient && currentPatient.patient_id) || (currentPatient && currentPatient.id) || 'N/A'}</span></p>
+                    <p class="mb-2"><strong>Setu ID:</strong> <span class="badge bg-light text-dark border">${(currentPatient && currentPatient.setu_id) || 'Not Provided'}</span></p>
                 </div>
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Name:</strong> ${currentPatient.name || (currentPatient.first_name + ' ' + currentPatient.last_name) || 'N/A'}</p>
+                    <p class="mb-2"><strong>Name:</strong> ${(currentPatient && (currentPatient.name || (currentPatient.first_name + ' ' + currentPatient.last_name))) || 'N/A'}</p>
                 </div>
             </div>
             <div class="row mt-2">

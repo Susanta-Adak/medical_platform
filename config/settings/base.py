@@ -177,7 +177,8 @@ if AWS_ACCESS_KEY_ID:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Session and Security Settings
-SESSION_COOKIE_AGE = 1800  # 30 minutes
+SESSION_COOKIE_AGE = 1740 # 29 minutes
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE = False  # Set to True in prod.py
 CSRF_COOKIE_SECURE = False     # Set to True in prod.py
