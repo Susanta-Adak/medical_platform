@@ -22,6 +22,7 @@ from datetime import datetime
 from accounts.models import User
 from .models import Questionnaire, Question, QuestionOption, Response, Answer
 from .forms import QuestionnaireForm, QuestionForm, ResponseForm
+from patients.models import PatientVitals
 
 # Questionnaire Views
 class QuestionnaireListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -333,12 +334,29 @@ class ResponseDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['answers'] = self.object.answers.select_related('question')
-        # Fetch latest vitals for the patient associated with this response
-        if self.object.patient:
+        
+        # Use the specifically linked vital snapshot if it exists
+        if self.object.vitals:
+            context['vitals'] = self.object.vitals
+        # Fallback to vitals recorded around the time of the response (for older records)
+        elif self.object.patient:
             from patients.models import PatientVitals
+            # Prefer vitals recorded before or at the time of submission
+            from django.utils import timezone
+            base_time = self.object.submitted_at or self.object.started_at or timezone.now()
+            
+            # Find the most recent vitals recorded *before* this response was submitted
             context['vitals'] = PatientVitals.objects.filter(
-                patient=self.object.patient
+                patient=self.object.patient,
+                recorded_at__lte=base_time
             ).order_by('-recorded_at').first()
+            
+            # If no vitals were recorded before (e.g. recorded slightly after or same time),
+            # just get the very latest as the best guess
+            if not context['vitals']:
+                context['vitals'] = PatientVitals.objects.filter(
+                    patient=self.object.patient
+                ).order_by('-recorded_at').first()
         else:
             context['vitals'] = None
         return context
@@ -756,8 +774,9 @@ def download_responses(request):
         
         # Write data rows
         for response in q_responses:
-            vitals = None
-            if response.patient:
+            # Use specifically linked vitals, fallback to latest for compatibility
+            vitals = response.vitals
+            if not vitals and response.patient:
                 vitals = PatientVitals.objects.filter(patient=response.patient).order_by('-recorded_at').first()
             
             row = [

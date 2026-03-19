@@ -883,6 +883,41 @@ def api_submit_questionnaire(request):
             user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
         )
         
+        # Link session and vitals if provided or available
+        session_id = request.POST.get('session_id')
+        vitals_id = request.POST.get('vitals_id')
+        
+        if session_id:
+            try:
+                session = ScreeningSession.objects.get(id=session_id)
+                response.session = session
+                if not vitals_id and session.vitals:
+                    response.vitals = session.vitals
+            except ScreeningSession.DoesNotExist:
+                pass
+                
+        if vitals_id:
+            try:
+                vitals = PatientVitals.objects.get(id=vitals_id)
+                response.vitals = vitals
+            except PatientVitals.DoesNotExist:
+                pass
+        
+        # Fallback to latest vitals recorded *before* submission if none specifically linked
+        if not response.vitals:
+            # Use the submission time for filtering
+            check_time = response.submitted_at or timezone.now()
+            response.vitals = PatientVitals.objects.filter(
+                patient=patient, 
+                recorded_at__lte=check_time
+            ).order_by('-recorded_at').first()
+            
+            # If still none recorded before (backwards compatibility for rare edge cases), get very latest
+            if not response.vitals:
+                response.vitals = PatientVitals.objects.filter(patient=patient).order_by('-recorded_at').first()
+            
+        response.save()
+        
         # Process all form data
         answer_count = 0
         
@@ -984,6 +1019,16 @@ def api_save_vitals(request):
             vitals.patient = patient
             vitals.recorded_by = request.user
             vitals.save()
+            
+            # Link to session if provided
+            session_id = request.POST.get('session_id')
+            if session_id:
+                try:
+                    session = ScreeningSession.objects.get(id=session_id)
+                    session.vitals = vitals
+                    session.save()
+                except ScreeningSession.DoesNotExist:
+                    pass
             
             return JsonResponse({
                 'success': True,

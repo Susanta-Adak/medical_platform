@@ -74,9 +74,10 @@ class Patient(models.Model):
         super().save(*args, **kwargs)
     
     def generate_patient_id(self):
-        """Generate a unique patient ID in format MDCP0001, MDCP0002, etc."""
+        """Generate a unique patient ID in format MDCP000001, MDCP000002, etc."""
         from django.db.models import Max
         
+        # Use 6 digits instead of 4 to support up to 999,999 students consistently.
         # Get the highest current patient ID number
         last_patient = Patient.objects.aggregate(
             max_id=Max('patient_id')
@@ -94,7 +95,7 @@ class Patient(models.Model):
             else:
                 new_number = 1
         
-        return f"MDCP{new_number:04d}"
+        return f"MDCP{new_number:06d}"
     
     @property
     def full_name(self):

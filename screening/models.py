@@ -177,6 +177,13 @@ class ScreeningSession(models.Model):
         blank=True,
         related_name='screening_sessions'
     )
+    vitals = models.ForeignKey(
+        'patients.PatientVitals',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='screening_sessions'
+    )
 
     # Consent capture (SRS)
     consent_obtained = models.BooleanField(default=False)

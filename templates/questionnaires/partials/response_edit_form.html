@@ -24,22 +24,27 @@
         </div>
 
         {% if question.question_type == "multiple_choice" or question.question_type == "image_choice" %}
-        <div class="space-y-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             {% for option in question.options.all %}
-            <label class="flex items-center space-x-3 cursor-pointer p-2.5 hover:bg-emerald-50/50 rounded-xl transition-all border border-transparent hover:border-emerald-100">
-                <input type="{% if question.allow_multiple_selections %}checkbox{% else %}radio{% endif %}" 
-                       name="q_{{ question.id }}" 
-                       value="{{ option.id }}" 
-                       {% if answer and option in answer.option_answer.all %}checked{% endif %} 
-                       class="h-5 w-5 text-emerald-600 border-gray-300 {% if question.allow_multiple_selections %}rounded-md{% else %}rounded-full{% endif %} focus:ring-emerald-500"
-                       onchange="handleEditFormBranching(this)">
-                <span class="flex items-center text-sm font-medium text-gray-700">
-                    {% if option.option_image %}
-                    <img src="{{ option.option_image.url }}" class="h-12 w-12 object-cover rounded-lg mr-3 border border-gray-100 shadow-sm">
-                    {% endif %}
-                    {{ option.text }}
-                </span>
-            </label>
+            <div class="flex justify-center">
+                <label class="flex flex-col cursor-pointer p-1 hover:bg-emerald-50/50 rounded-lg transition-all border-2 border-gray-100 hover:border-emerald-200 relative group w-full max-w-[280px]">
+                    <input type="{% if question.allow_multiple_selections %}checkbox{% else %}radio{% endif %}" 
+                           name="q_{{ question.id }}" 
+                           value="{{ option.id }}" 
+                           {% if answer and option in answer.option_answer.all %}checked{% endif %} 
+                           class="absolute top-1 left-1 h-3.5 w-3.5 text-emerald-600 border-gray-300 {% if question.allow_multiple_selections %}rounded-sm{% else %}rounded-full{% endif %} focus:ring-emerald-500 z-10"
+                           onchange="handleEditFormBranching(this)">
+                    
+                    <div class="flex flex-col items-center w-full mt-1 text-center">
+                        {% if option.option_image %}
+                        <div class="w-full mb-1 overflow-hidden rounded-md bg-gray-50 border border-gray-100">
+                            <img src="{{ option.option_image.url }}" class="w-full h-28 object-contain transition-transform group-hover:scale-105">
+                        </div>
+                        {% endif %}
+                        <span class="text-[11px] font-bold text-gray-700 px-1 line-clamp-1 truncate">{{ option.text }}</span>
+                    </div>
+                </label>
+            </div>
             {% endfor %}
         </div>
 
