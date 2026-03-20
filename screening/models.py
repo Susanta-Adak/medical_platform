@@ -66,6 +66,9 @@ class ScreeningType(models.Model):
 class ScreeningSession(models.Model):
     """Model representing a screening session for a patient."""
     
+    # ID is now the same as patient_id (e.g. MDCP000001)
+    id = models.CharField(max_length=20, primary_key=True)
+    
     # Status choices
     STATUS_SCHEDULED = 'scheduled'
     STATUS_IN_PROGRESS = 'in_progress'
@@ -108,10 +111,10 @@ class ScreeningSession(models.Model):
     ]
     
     # Basic information
-    patient = models.ForeignKey(
+    patient = models.OneToOneField(
         'patients.Patient',
         on_delete=models.CASCADE,
-        related_name='screening_sessions'
+        related_name='screening_session'
     )
     
     screening_type = models.ForeignKey(

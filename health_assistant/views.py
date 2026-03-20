@@ -310,12 +310,15 @@ def session_overview(request, session_id):
         reading_data__session_id=str(session_id)
     ).order_by('recorded_at')
 
-    # If not found by string, try int (since it might be stored either way depending on source)
-    if not readings.exists():
-        readings = DeviceReading.objects.filter(
-            patient=session.patient,
-            reading_data__session_id=int(session_id)
-        ).order_by('recorded_at')
+    # If not found by string, try int (since old sessions were integers)
+    if not readings.exists() and str(session_id).isdigit():
+        try:
+            readings = DeviceReading.objects.filter(
+                patient=session.patient,
+                reading_data__session_id=int(session_id)
+            ).order_by('recorded_at')
+        except (ValueError, TypeError):
+            pass
     
     return render(request, 'health_assistant/session_overview.html', {
         'session': session,
@@ -817,22 +820,25 @@ def api_create_session(request):
                 return JsonResponse({'error': 'Device is not connected'}, status=400)
             
             from django.utils import timezone
-            # Create session
-            session = ScreeningSession.objects.create(
-                patient=patient,
-                screening_type=screening_type,
-                device_used=device,
-                created_by=request.user,
-                status='in_progress',
-                scheduled_date=timezone.now(),
-                consent_obtained=True,
-                consented_at=timezone.now()
+            # Create or update session using patient_id as session ID
+            session, created = ScreeningSession.objects.update_or_create(
+                id=patient.patient_id,
+                defaults={
+                    'patient': patient,
+                    'screening_type': screening_type,
+                    'device_used': device,
+                    'created_by': request.user,
+                    'status': 'in_progress',
+                    'scheduled_date': timezone.now(),
+                    'consent_obtained': True,
+                    'consented_at': timezone.now()
+                }
             )
             
             return JsonResponse({
                 'success': True,
-                'session_id': session.id,
-                'message': 'Screening session created successfully'
+                'session_id': session.id, # This is now the string patient_id
+                'message': 'Screening session updated successfully' if not created else 'Screening session created successfully'
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)

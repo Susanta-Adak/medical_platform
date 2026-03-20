@@ -71,7 +71,33 @@ class Patient(models.Model):
         # Generate patient ID if it doesn't exist
         if not self.patient_id:
             self.patient_id = self.generate_patient_id()
+        
+        # Call super first to ensure patient exists in DB
         super().save(*args, **kwargs)
+        
+        # Ensure a default screening session exists for this patient
+        try:
+            from screening.models import ScreeningSession, ScreeningType
+            from django.utils import timezone
+            
+            # Use the first active screening type as default or any existing one
+            default_type = ScreeningType.objects.filter(is_active=True).first()
+            if default_type:
+                # Use update_or_create to ensure the ID matches patient_id
+                # and create session if it doesn't exist
+                ScreeningSession.objects.get_or_create(
+                    id=self.patient_id,
+                    defaults={
+                        'patient': self,
+                        'screening_type': default_type,
+                        'status': ScreeningSession.STATUS_SCHEDULED,
+                        'scheduled_date': timezone.now(),
+                    }
+                )
+        except Exception as e:
+            # We don't want to fail patient save if session creation fails
+            # but we should log it or handle it appropriately
+            print(f"Error creating default session for patient {self.patient_id}: {e}")
     
     def generate_patient_id(self):
         """Generate a unique patient ID in format MDCP000001, MDCP000002, etc."""
