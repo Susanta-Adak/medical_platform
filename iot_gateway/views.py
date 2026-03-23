@@ -94,12 +94,16 @@ def receive_image_data(request):
             device = get_object_or_404(Device, device_id=device_id)
             session = get_object_or_404(ScreeningSession, pk=session_id)
 
+            # Determine file type
+            import mimetypes
+            content_type = mimetypes.guess_type(image_file.name)[0] or 'image/jpeg'
+
             # Save as a ScreeningAttachment
             attachment = ScreeningAttachment.objects.create(
                 session=session,
                 file=image_file,
-                file_type='image/jpeg', # Assuming jpeg for now
-                description=f"IoT Scan from {device.name}",
+                file_type=content_type,
+                description=f"IoT Data Upload from {device.name}",
                 uploaded_by=session.conducted_by
             )
 
