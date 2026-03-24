@@ -420,6 +420,7 @@ def api_search_patients(request):
             page = 1
             
         export_format = request.GET.get('export', '')
+        view_type = request.GET.get('view', '')
     
         # Handle CSV export
         if export_format == 'csv':
@@ -480,10 +481,28 @@ def api_search_patients(request):
             filters &= Q(created_at__date__gte=date_from)
         if date_to:
             filters &= Q(created_at__date__lte=date_to)
+            
+        from django.db.models import Subquery, OuterRef
+        from questionnaires.models import Response
+        from patients.models import PatientNote
+        
+        if view_type == 'pending':
+            filters &= Q(questionnaire_responses__isnull=False, questionnaire_responses__is_complete=True)
+            filters &= ~Q(notes__note_type=PatientNote.NoteType.CONSULTATION, notes__is_important=False)
+        elif view_type == 'completed':
+            filters &= Q(questionnaire_responses__isnull=False, questionnaire_responses__is_complete=True)
+            filters &= Q(notes__note_type=PatientNote.NoteType.CONSULTATION, notes__is_important=False)
         
         # Get patients with pagination
         # IMPORTANT: Apply filters to all cases, not just when query is present
-        patients = Patient.objects.filter(filters).order_by('-created_at')
+        latest_response = Response.objects.filter(
+            patient=OuterRef('pk'), 
+            is_complete=True
+        ).order_by('-submitted_at')
+        
+        patients = Patient.objects.filter(filters).annotate(
+            latest_response_id=Subquery(latest_response.values('id')[:1])
+        ).order_by('-created_at').distinct()
         
         # Pagination
         from django.core.paginator import Paginator
@@ -509,7 +528,8 @@ def api_search_patients(request):
                 'email': patient.email,
                 'city': patient.city,
                 'address': patient.address,
-                'created_at': patient.created_at.isoformat() if patient.created_at else ''
+                'created_at': patient.created_at.isoformat() if patient.created_at else '',
+                'latest_response_id': getattr(patient, 'latest_response_id', None)
             })
         
         return JsonResponse({

@@ -268,7 +268,8 @@
             gender: currentGender,
             date_from: currentDateFrom,
             date_to: currentDateTo,
-            page: currentPage
+            page: currentPage,
+            view: '{{ view|default:"" }}'
         });
 
         document.getElementById('patientsTableBody').innerHTML = `
@@ -353,6 +354,11 @@
                             <i class="fas fa-user-edit text-primary"></i>
                             <span class="tooltip-text">Edit Records</span>
                         </button>
+                        ${patient.latest_response_id ? `
+                        <button class="btn btn-success btn-sm px-3 has-tooltip me-1" onclick="viewConsultation(${patient.latest_response_id})" title="Consult Patient">
+                            <i class="fas fa-stethoscope"></i>
+                            <span class="tooltip-text">Start Consultation</span>
+                        </button>` : ''}
                         <button class="btn btn-primary btn-sm px-3 has-tooltip" onclick="viewPatient(${patient.id})" title="View Details">
                             <i class="fas fa-eye"></i>
                             <span class="tooltip-text">View Detailed File</span>
@@ -403,6 +409,10 @@
                     alert('Error updating patient: ' + (data.error || 'Check input data'));
                 }
             });
+    }
+
+    function viewConsultation(responseId) {
+        window.location.href = `/doctor/responses/${responseId}/`;
     }
 
     function viewPatient(patientId) {

@@ -84,6 +84,7 @@ class PendingConsultationListView(PatientListView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = "Pending Consultations"
         context['page_subtitle'] = "Patients waiting for dentist's consultation or needing active follow-up."
+        context['view'] = 'pending'
         return context
 
 class CompletedConsultationListView(PatientListView):
@@ -98,6 +99,7 @@ class CompletedConsultationListView(PatientListView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = "Completed Consultations"
         context['page_subtitle'] = "Patients who have received a consultation."
+        context['view'] = 'completed'
         return context
 
 class PatientDetailView(DoctorRequiredMixin, DetailView):
