@@ -154,7 +154,31 @@ class PatientDetailView(DoctorRequiredMixin, DetailView):
         context['latest_response'] = self.object.questionnaire_responses.filter(is_complete=True).order_by('-submitted_at').first()
         # Get the latest consultation note for this patient
         context['latest_consultation'] = self.object.notes.filter(note_type='CONSULTATION').order_by('-created_at').first()
+        # Get prescriptions
+        from patients.models import Document
+        context['prescriptions'] = self.object.documents.filter(document_type=Document.DocumentType.PRESCRIPTION).order_by('-uploaded_at')
         return context
+
+@login_required
+def download_prescription(request, document_id):
+    from patients.models import Document
+    from doctor.pdf_utils import generate_presigned_url
+    from django.http import Http404
+    
+    document = get_object_or_404(Document, id=document_id, document_type=Document.DocumentType.PRESCRIPTION)
+    
+    object_name = document.description
+    if object_name and object_name.startswith('prescriptions/'):
+        try:
+            url = generate_presigned_url(object_name)
+            return redirect(url)
+        except Exception:
+            pass
+            
+    if document.file:
+        return redirect(document.file.url)
+        
+    raise Http404("Prescription file not found")
 
 class ResponseListView(DoctorRequiredMixin, ListView):
     model = Response
@@ -272,7 +296,9 @@ class ConsultationNoteCreateMixin:
 
         content = "<br><br>".join(content_lines)
 
-        from patients.models import PatientNote
+        from patients.models import PatientNote, Document, MedicalRecord
+        
+        # Save the consultation note
         PatientNote.objects.create(
             patient=patient,
             author=request.user,
@@ -281,6 +307,82 @@ class ConsultationNoteCreateMixin:
             content=content,
             is_important=further_followup
         )
+
+        # Generate Prescription PDF
+        try:
+            from doctor.pdf_utils import generate_prescription_pdf, upload_pdf_to_s3
+            from django.utils import timezone
+            from django.core.files.base import ContentFile
+            
+            # Prepare medicines list for PDF
+            pdf_medicines = []
+            for i in range(len(medicine_names)):
+                med = medicine_names[i].strip()
+                if med:
+                    pdf_medicines.append({
+                        'type': prescription_types[i].strip() if i < len(prescription_types) else "",
+                        'name': med,
+                        'dose': dosages[i].strip() if i < len(dosages) else "",
+                        'instructions': instructions[i].strip() if i < len(instructions) else "",
+                        'duration': durations[i].strip() if i < len(durations) else "",
+                        'others': others[i].strip() if i < len(others) else ""
+                    })
+
+            # Fetch medical record for history
+            medical_record = MedicalRecord.objects.filter(patient=patient).first()
+            
+            # Fetch vitals
+            vitals = patient.vitals.order_by('-recorded_at').first()
+
+            context = {
+                'request': request,
+                'patient': patient,
+                'date': timezone.now().strftime("%d %b %Y, %I:%M %p"),
+                'vitals': vitals,
+                'medical_history': medical_record.chronic_conditions if medical_record else "None",
+                'family_history': medical_record.family_history if medical_record else "None",
+                'medications': medical_record.current_medications if medical_record else "None",
+                'allergies': medical_record.allergies if medical_record else "None",
+                'diagnosis': provisional_diagnosis,
+                'medicines': pdf_medicines,
+                'investigations': investigations,
+                'advice': advice,
+                'followup_required': "Yes" if further_followup else "No",
+                'notes': on_examination,
+                'assistant_name': self.object.respondent.get_full_name() if self.object.respondent else "-",
+                'doctor': request.user,
+            }
+            
+            pdf_bytes = generate_prescription_pdf(context)
+            
+            # Try to upload to S3 if configured, otherwise save locally
+            try:
+                identifier = patient.setu_id if patient.setu_id else patient.patient_id
+                object_name = upload_pdf_to_s3(pdf_bytes, identifier)
+                
+                Document.objects.create(
+                    patient=patient,
+                    uploaded_by=request.user,
+                    document_type=Document.DocumentType.PRESCRIPTION,
+                    title=f"Prescription - {timezone.now().strftime('%Y-%m-%d')}",
+                    description=object_name,
+                )
+            except Exception as e:
+                # Fallback to local storage if S3 fails or is not configured
+                identifier = patient.setu_id if patient.setu_id else patient.patient_id
+                doc = Document.objects.create(
+                    patient=patient,
+                    uploaded_by=request.user,
+                    document_type=Document.DocumentType.PRESCRIPTION,
+                    title=f"Prescription - {timezone.now().strftime('%Y-%m-%d')}",
+                )
+                doc.file.save(f"prescriptions/{identifier}.pdf", ContentFile(pdf_bytes))
+                
+        except Exception as e:
+            # We don't want to break the whole flow if PDF generation fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to generate prescription PDF: {str(e)}")
 
         messages.success(request, "Consultation note added successfully to patient's record.")
         return redirect('doctor:pending_consultations')

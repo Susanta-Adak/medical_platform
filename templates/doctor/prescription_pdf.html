@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Annual Health Screening</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 8pt;
+            color: #000;
+            line-height: 1.2;
+        }
+        .text-grey {
+            color: #555;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 5px 0;
+        }
+        table {
+        }
+        .header-table, .compact-table {
+            width: 100%;
+        }
+        td {
+            vertical-align: top;
+            padding: 2px 0;
+            word-wrap: break-word;
+        }
+        .header-text div {
+            margin-bottom: 2px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 9pt;
+            margin-top: 6px;
+            margin-bottom: 2px;
+        }
+        .medicines-table {
+            margin-top: 3px;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+        .medicines-table th {
+            background-color: #f9f9f9;
+            text-align: left;
+            font-weight: bold;
+        }
+        .compact-table td {
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td width="55%" class="header-text">
+                <div style="font-size: 14pt; font-weight: bold; color: #000; margin-bottom: 4px;">Annual Health Screening</div>
+                <div class="text-grey">THRIVE CENTRE</div>
+                <div class="text-grey" style="font-size: 7pt;">(Technology-enabled Holistic Resilience & Innovation for Vitality and Empowerment)</div>
+                <div class="text-grey">IIT Kharagpur</div>
+            </td>
+            <td width="45%" align="right" valign="middle">
+                <!-- Using zoom to auto scale images properly without distorting ratio -->
+                <img src="/static/images/logos/iit-logo.png" height="45">&nbsp;&nbsp;
+                <img src="/static/images/logos/thrive.png" height="45">&nbsp;&nbsp;
+                <img src="/static/images/logos/setu-logo.png" height="45">
+            </td>
+        </tr>
+    </table>
+
+    <hr style="margin-top: 0;">
+
+    <div style="text-align: right; margin-bottom: 5px; margin-top: 5px;">
+        <strong>Date:</strong> {{ date }}
+    </div>
+    
+    <hr>
+
+    <table class="compact-table">
+        <tr>
+            <td width="40%"><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</td>
+            <td width="30%"><strong>Age:</strong> {{ patient.age|default:"-" }}</td>
+            <td width="30%"><strong>Sex:</strong> {{ patient.get_gender_display|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td><strong>ID:</strong> {{ patient.setu_id|default:"-" }}</td>
+            <td><strong>Email:</strong> {{ patient.email|default:"-" }}</td>
+            <td><strong>Phone:</strong> {{ patient.phone_number|default:"-" }}</td>
+        </tr>
+    </table>
+
+    <hr>
+
+    <div class="section-title">Vitals</div>
+    <table class="compact-table">
+        <tr>
+            <td width="50%">Height: {{ vitals.height|default:"-" }} cm</td>
+            <td width="50%">Weight: {{ vitals.weight|default:"-" }} kg</td>
+        </tr>
+        <tr>
+            <td>BMI: {{ vitals.bmi|default:"-" }}</td>
+            <td>Waist: {{ vitals.waist|default:"-" }} cm</td>
+        </tr>
+        <tr>
+            <td>BP: {{ vitals.blood_pressure_systolic|default:"-" }}/{{ vitals.blood_pressure_diastolic|default:"-" }}</td>
+            <td>SPO2: {{ vitals.spo2|default:"-" }}%</td>
+        </tr>
+        <tr>
+            <td>Pulse: {{ vitals.heart_rate|default:"-" }} bpm</td>
+            <td>Temp: {{ vitals.temperature|default:"-" }}&deg;F</td>
+        </tr>
+    </table>
+
+    <hr>
+
+    <table class="compact-table">
+        <tr>
+            <td width="50%">
+                <strong>Medical History</strong><br>
+                <div>{{ medical_history|default:"None" }}</div>
+            </td>
+            <td width="50%">
+                <strong>Family Medical History</strong><br>
+                <div>{{ family_history|default:"None" }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-top: 5px;">
+                <strong>Ongoing Medications</strong><br>
+                <div>{{ medications|default:"None" }}</div>
+            </td>
+            <td style="padding-top: 5px;">
+                <strong>Allergies</strong><br>
+                <div>{{ allergies|default:"None" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <hr>
+
+    <div class="section-title">Diagnosis</div>
+    <div>{{ diagnosis|default:"-" }}</div>
+
+    <div class="section-title" style="margin-top: 8px;">Medicines</div>
+    <table border="1" bordercolor="#ddd" cellspacing="0" cellpadding="4" class="medicines-table">
+        <thead>
+            <tr>
+                <th width="10%">Type</th>
+                <th width="30%">Name & Strength</th>
+                <th width="10%">Dose</th>
+                <th width="20%">Instructions</th>
+                <th width="10%">Duration</th>
+                <th width="20%">Others</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for med in medicines %}
+            <tr>
+                <td>{{ med.type }}</td>
+                <td>{{ med.name }}</td>
+                <td>{{ med.dose }}</td>
+                <td>{{ med.instructions }}</td>
+                <td>{{ med.duration }}</td>
+                <td>{{ med.others }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" align="center">No medicines prescribed</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title" style="margin-top: 8px;">Investigations</div>
+    <div>{{ investigations|default:"-" }}</div>
+
+    <div class="section-title" style="margin-top: 8px;">Advice</div>
+    <div>{{ advice|default:"-" }}</div>
+
+    <div style="margin-top: 8px;"><strong>* Follow-up Required:</strong> {{ followup_required }}</div>
+    
+    {% if notes %}
+    <div style="margin-top: 4px;"><strong>Notes :</strong> {{ notes }}</div>
+    {% endif %}
+
+    <table style="margin-top: 25px;">
+        <tr>
+            <td width="50%" valign="bottom">
+                <strong>Health Assistant:</strong> {{ assistant_name|default:"-" }}
+            </td>
+            <td width="50%" align="right" valign="bottom">
+                {% if doctor_signature_b64 %}
+                <img src="{{ doctor_signature_b64 }}" height="40"><br>
+                {% elif doctor.signature %}
+                <!-- Fallback if base64 failed -->
+                <img src="{{ doctor.signature.url }}" height="40"><br>
+                {% else %}
+                <br><br><br>
+                {% endif %}
+                <strong>Dr. {{ doctor.get_full_name|default:doctor.username }}</strong><br>
+                MBBS<br>
+                Reg No: {{ doctor.registration_number|default:"-" }}
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

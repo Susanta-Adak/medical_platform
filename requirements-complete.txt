@@ -161,3 +161,6 @@ django-migration-testcase==1.1.0
 # Caching: Redis (optional)
 # Monitoring: Sentry (optional)
 # Background tasks: Celery + Redis (optional)
+
+# PDF Generation
+xhtml2pdf==0.2.11

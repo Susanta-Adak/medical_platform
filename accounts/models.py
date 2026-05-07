@@ -35,11 +35,12 @@ class User(AbstractUser):
         HEALTH_ASSISTANT = 'HEALTH_ASSISTANT', _('Health Assistant')
         DOCTOR = 'DOCTOR', _('Doctor')
     
-    # Remove username field and use email instead
     username = None
     email = models.EmailField(_('email address'), unique=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.HEALTH_ASSISTANT)
     phone_number = models.CharField(max_length=20, blank=True)
+    registration_number = models.CharField(max_length=50, blank=True)
+    signature = models.ImageField(upload_to='doctor_signatures/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)

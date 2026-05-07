@@ -59,7 +59,7 @@ class UserListView(SuperuserRequiredMixin, ListView):
 class UserCreateView(SuperuserRequiredMixin, CreateView):
     model = User
     template_name = 'dashboard/admin/users/user_form.html'
-    fields = ['email', 'first_name', 'last_name', 'role', 'is_active', 'is_staff', 'is_superuser']
+    fields = ['email', 'first_name', 'last_name', 'role', 'registration_number', 'signature', 'is_active', 'is_staff', 'is_superuser']
     success_url = reverse_lazy('dashboard:admin:user_list')
     
     def get_form(self, form_class=None):
@@ -108,7 +108,7 @@ class UserCreateView(SuperuserRequiredMixin, CreateView):
 class UserUpdateView(SuperuserRequiredMixin, UpdateView):
     model = User
     template_name = 'dashboard/admin/users/user_form.html'
-    fields = ['email', 'first_name', 'last_name', 'role', 'is_active', 'is_staff', 'is_superuser']
+    fields = ['email', 'first_name', 'last_name', 'role', 'registration_number', 'signature', 'is_active', 'is_staff', 'is_superuser']
     
     def get_success_url(self):
         return reverse_lazy('dashboard:admin:user_detail', kwargs={'pk': self.object.pk})
