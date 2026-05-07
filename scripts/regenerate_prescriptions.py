@@ -80,6 +80,17 @@ for note in notes:
     medical_record = MedicalRecord.objects.filter(patient=patient).first()
     vitals = patient.vitals.order_by('-recorded_at').first()
 
+    from questionnaires.models import Response
+    response = Response.objects.filter(
+        patient=patient, 
+        is_complete=True, 
+        submitted_at__lte=note.created_at
+    ).order_by('-submitted_at').first()
+    
+    assistant_name = "-"
+    if response and response.respondent:
+        assistant_name = response.respondent.get_full_name()
+
     context = {
         'patient': patient,
         'date': note.created_at.strftime("%d %b %Y, %I:%M %p"),
@@ -94,7 +105,7 @@ for note in notes:
         'advice': advice,
         'followup_required': followup_required,
         'notes': exam_notes,
-        'assistant_name': "-", 
+        'assistant_name': assistant_name, 
         'doctor': note.author,
     }
     
