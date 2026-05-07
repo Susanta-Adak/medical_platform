@@ -1,3 +1,12 @@
+import os
+import sys
+import django
+
+# Add the project directory to the sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.prod") # or dev/base depending on environment
+django.setup()
+
 import re
 from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
@@ -9,6 +18,10 @@ print(f"Found {docs.count()} prescriptions to regenerate.")
 
 for doc in docs:
     patient = doc.patient
+    
+    if not patient.setu_id:
+        print(f"Skipping doc {doc.id} - Patient has no setu_id.")
+        continue
     # Find the closest patient note before this document
     note = PatientNote.objects.filter(
         patient=patient, 
@@ -97,15 +110,15 @@ for doc in docs:
         pdf_bytes = generate_prescription_pdf(context)
         
         try:
-            identifier = patient.setu_id if patient.setu_id else patient.patient_id
+            identifier = patient.setu_id
             object_name = upload_pdf_to_s3(pdf_bytes, identifier)
             doc.description = object_name
             doc.save(update_fields=['description'])
-            print(f"Successfully regenerated and uploaded to S3: Doc ID {doc.id}")
+            print(f"Successfully regenerated and uploaded to S3: Doc ID {doc.id} for SETU ID {identifier}")
         except Exception as aws_e:
-            identifier = patient.setu_id if patient.setu_id else patient.patient_id
+            identifier = patient.setu_id
             doc.file.save(f"prescriptions/{identifier}.pdf", ContentFile(pdf_bytes))
-            print(f"Successfully regenerated locally: Doc ID {doc.id}")
+            print(f"Successfully regenerated locally: Doc ID {doc.id} for SETU ID {identifier}")
             
     except Exception as e:
         print(f"Failed to generate PDF for Doc ID {doc.id}: {e}")
