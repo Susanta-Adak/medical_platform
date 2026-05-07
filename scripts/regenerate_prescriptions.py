@@ -13,24 +13,16 @@ from django.core.files.base import ContentFile
 from patients.models import Document, PatientNote, MedicalRecord
 from doctor.pdf_utils import generate_prescription_pdf, upload_pdf_to_s3
 
-docs = Document.objects.filter(document_type=Document.DocumentType.PRESCRIPTION)
-print(f"Found {docs.count()} prescriptions to regenerate.")
+from django.utils import timezone
 
-for doc in docs:
-    patient = doc.patient
+notes = PatientNote.objects.filter(note_type=PatientNote.NoteType.CONSULTATION)
+print(f"Found {notes.count()} consultation notes to process.")
+
+for note in notes:
+    patient = note.patient
     
     if not patient.setu_id:
-        print(f"Skipping doc {doc.id} - Patient has no setu_id.")
-        continue
-    # Find the closest patient note before this document
-    note = PatientNote.objects.filter(
-        patient=patient, 
-        note_type=PatientNote.NoteType.CONSULTATION, 
-        created_at__lte=doc.uploaded_at
-    ).order_by('-created_at').first()
-    
-    if not note:
-        print(f"Skipping doc {doc.id} - no corresponding consultation note found.")
+        print(f"Skipping Note ID {note.id} - Patient has no setu_id.")
         continue
         
     content = note.content
@@ -38,7 +30,7 @@ for doc in docs:
     diagnosis = ""
     investigations = ""
     advice = ""
-    notes = ""
+    exam_notes = ""
     followup_required = "No"
     
     diag_match = re.search(r'<strong>Provisional Diagnosis</strong><br>(.*?)(?:<br><br>|$)', content, re.DOTALL)
@@ -51,7 +43,7 @@ for doc in docs:
     if adv_match: advice = adv_match.group(1).strip()
     
     exam_match = re.search(r'<strong>On Examination</strong><br>(.*?)(?:<br><br>|$)', content, re.DOTALL)
-    if exam_match: notes = exam_match.group(1).strip()
+    if exam_match: exam_notes = exam_match.group(1).strip()
     
     fup_match = re.search(r'<strong>Further Followup Required</strong><br>(Yes|No)', content)
     if fup_match: followup_required = fup_match.group(1)
@@ -90,7 +82,7 @@ for doc in docs:
 
     context = {
         'patient': patient,
-        'date': doc.uploaded_at.strftime("%d %b %Y, %I:%M %p"),
+        'date': note.created_at.strftime("%d %b %Y, %I:%M %p"),
         'vitals': vitals,
         'medical_history': medical_record.chronic_conditions if medical_record else "None",
         'family_history': medical_record.family_history if medical_record else "None",
@@ -101,26 +93,36 @@ for doc in docs:
         'investigations': investigations,
         'advice': advice,
         'followup_required': followup_required,
-        'notes': notes,
+        'notes': exam_notes,
         'assistant_name': "-", 
-        'doctor': doc.uploaded_by,
+        'doctor': note.author,
     }
     
     try:
         pdf_bytes = generate_prescription_pdf(context)
         
+        # Check if a Document already exists for this patient, otherwise create one
+        doc = Document.objects.filter(patient=patient, document_type=Document.DocumentType.PRESCRIPTION).first()
+        if not doc:
+            doc = Document(
+                patient=patient,
+                uploaded_by=note.author,
+                document_type=Document.DocumentType.PRESCRIPTION,
+                title=f"Prescription - {timezone.now().strftime('%Y-%m-%d')}"
+            )
+        
+        identifier = patient.setu_id
         try:
-            identifier = patient.setu_id
             object_name = upload_pdf_to_s3(pdf_bytes, identifier)
             doc.description = object_name
-            doc.save(update_fields=['description'])
-            print(f"Successfully regenerated and uploaded to S3: Doc ID {doc.id} for SETU ID {identifier}")
+            doc.save()
+            print(f"Generated and uploaded to S3: Note ID {note.id} -> Doc ID {doc.id} for SETU ID {identifier}")
         except Exception as aws_e:
-            identifier = patient.setu_id
             doc.file.save(f"prescriptions/{identifier}.pdf", ContentFile(pdf_bytes))
-            print(f"Successfully regenerated locally: Doc ID {doc.id} for SETU ID {identifier}")
+            doc.save()
+            print(f"Generated locally: Note ID {note.id} -> Doc ID {doc.id} for SETU ID {identifier}")
             
     except Exception as e:
-        print(f"Failed to generate PDF for Doc ID {doc.id}: {e}")
+        print(f"Failed to generate PDF for Note ID {note.id}: {e}")
 
-print("Done regenerating prescriptions.")
+print("Done generating prescriptions.")
