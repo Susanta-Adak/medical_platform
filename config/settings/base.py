@@ -102,11 +102,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if importlib.util.find_spec('whitenoise') is not None:
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-if importlib.util.find_spec('corsheaders') is not None:
-    MIDDLEWARE.insert(2, 'corsheaders.middleware.CorsMiddleware')
+# Note: whitenoise and corsheaders are already included directly in the MIDDLEWARE list above.
 
 ROOT_URLCONF = 'config.urls'
 
@@ -199,3 +195,6 @@ CSRF_COOKIE_SECURE = False     # Set to True in prod.py
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
+# SETU Integration - API Key for external prescription access
+SETU_API_KEY = os.environ.get('SETU_API_KEY', 'pCApzCI7wzfnbrsbutQ-53w5lUlsnBRG00neFd-bTt8')
