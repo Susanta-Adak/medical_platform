@@ -4,6 +4,7 @@ from django.views.decorators.http import require_GET
 from patients.models import Patient, Document
 from doctor.pdf_utils import generate_presigned_url
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,11 @@ def setu_prescription_api(request, identifier):
     Requires setu_id (or patient_id) in URL.
     Returns the presigned S3 URL for the PDF.
     """
+    # Simple API Key Authentication
+    api_key = request.headers.get('X-API-Key')
+    if not api_key or api_key != settings.SETU_API_KEY:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized. Invalid or missing X-API-Key header.'}, status=401)
+        
     try:
         # Try fetching by setu_id first, then fallback to patient_id
         patient = Patient.objects.filter(setu_id=identifier).first()
