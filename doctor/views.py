@@ -351,7 +351,10 @@ class ConsultationNoteCreateMixin:
                 'advice': advice,
                 'followup_required': "Yes" if further_followup else "No",
                 'notes': on_examination,
-                'assistant_name': self.object.respondent.get_full_name() if self.object.respondent else "-",
+                'assistant_name': (
+                    self.object.respondent.get_full_name() or
+                    self.object.respondent.email
+                ) if self.object.respondent else "-",
                 'doctor': request.user,
             }
             
