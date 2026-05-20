@@ -24,13 +24,25 @@ DATABASES = {
     }
 }
 
-# Static files (AWS S3 or local)
+# Static files - always served locally via whitenoise
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Media files (AWS S3 or local)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Media files - use S3 if AWS credentials are present, else fall back to local
+if os.environ.get('AWS_ACCESS_KEY_ID', '').strip():
+    # S3 Storage — all uploaded files go to S3, not EC2 disk
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', 'medical-data-collection-platform')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'ap-south-1')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    MEDIA_ROOT = ''  # Not used when S3 is active
+else:
+    # Fallback to local disk (development or if AWS keys missing)
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
